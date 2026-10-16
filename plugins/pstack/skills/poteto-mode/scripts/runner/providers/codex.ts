@@ -1,3 +1,6 @@
+import { existsSync } from "node:fs";
+import { homedir } from "node:os";
+import { join } from "node:path";
 import { type Access, adapter, type ParseResult } from "../registry/contract.ts";
 import type { NormalizedUsage } from "../types.ts";
 import {
@@ -52,6 +55,14 @@ function parse(stdout: string): ParseResult {
   };
 }
 
+// luca fork: an optional Codex profile layer trims what a one-shot lane loads
+// (skills, MCP servers, features). Absent file, unchanged upstream argv.
+export const LANE_PROFILE = "pstack-lane";
+
+export function laneProfileArgs(codexHome = process.env.CODEX_HOME || join(homedir(), ".codex")): string[] {
+  return existsSync(join(codexHome, `${LANE_PROFILE}.config.toml`)) ? ["--profile", LANE_PROFILE] : [];
+}
+
 function sandbox(access: Access): string {
   if (access.mode === "read-only") return "read-only";
   return access.sandbox === "full-access" ? "danger-full-access" : "workspace-write";
@@ -92,6 +103,7 @@ export const codex = adapter({
       "hooks",
       "--disable",
       "memories",
+      ...laneProfileArgs(),
       "--json",
       "-",
     ],

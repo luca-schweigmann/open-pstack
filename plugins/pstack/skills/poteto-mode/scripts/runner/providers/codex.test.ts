@@ -1,7 +1,12 @@
 import { describe, expect, it } from "bun:test";
+import { mkdtempSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import type { LaneRequest } from "../registry/index.ts";
 import { adapterSuite, testLane } from "./adapter-suite.ts";
-import { codex } from "./codex.ts";
+import { codex, laneProfileArgs } from "./codex.ts";
+
+process.env.CODEX_HOME = mkdtempSync(join(tmpdir(), "codex-home-"));
 
 adapterSuite(codex);
 
@@ -9,6 +14,15 @@ const lane = (request: Partial<LaneRequest> = {}) =>
   testLane({ provider: "codex", model: "gpt-5.6-sol", ...request });
 const argv = (request: Partial<LaneRequest> = {}) => codex.launch.argv(lane(request), { sharedGitDir: null, providerSidecar: null });
 const parse = (stdout: string) => codex.parse({ exitCode: 0, stdout, stderr: "", sidecar: null }, lane());
+
+describe("codex lane profile", () => {
+  it("adds the pstack-lane profile only when its layer file exists", () => {
+    const home = mkdtempSync(join(tmpdir(), "codex-home-"));
+    expect(laneProfileArgs(home)).toEqual([]);
+    writeFileSync(join(home, "pstack-lane.config.toml"), "");
+    expect(laneProfileArgs(home)).toEqual(["--profile", "pstack-lane"]);
+  });
+});
 
 describe("codex launch", () => {
   it("pins Codex model, effort, sandbox, cwd, and JSONL output", () => {
