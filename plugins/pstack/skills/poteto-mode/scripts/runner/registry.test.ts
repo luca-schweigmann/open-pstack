@@ -91,6 +91,7 @@ describe("registry data", () => {
       ["grok", "xhigh"],
       ["opus", "max"],
       ["luna", "max"],
+      ["astra", "high"],
       ["sonnet", "max"],
       ["opus-5-5", "max"],
       ["swe-2", "max"],
@@ -109,8 +110,8 @@ describe("registry data", () => {
       .map((entry) => [entry.name, entry.rolling!.revisionPrefix]))
       .toEqual([["fable", "claude-fable-"], ["opus", "claude-opus-"], ["sonnet", "claude-sonnet-"]]);
     expect(REGISTRY.families.filter((entry) => entry.provider === "codex").map((entry) => [entry.name, entry.model]))
-      .toEqual([["sol", "gpt-6.1-sol"], ["luna", "gpt-6-luna"]]);
-    expect(REGISTRY.families.filter((entry) => effortsOf(entry).includes("ultra")).map((entry) => entry.name)).toEqual(["sol"]);
+      .toEqual([["sol", "gpt-6.1-sol"], ["luna", "gpt-6-luna"], ["astra", "gpt-6-astra"]]);
+    expect(REGISTRY.families.filter((entry) => effortsOf(entry).includes("ultra")).map((entry) => entry.name)).toEqual(["sol", "astra"]);
   });
 
   it("keeps family names and (provider, model) pairs unique, and efforts ordered", () => {

@@ -54,6 +54,15 @@ export const FAMILIES = [
     upstream: null,
   }),
   family({
+    name: "astra",
+    label: "GPT-6 Astra",
+    provider: "codex",
+    model: "gpt-6-astra",
+    efforts: UP_TO_ULTRA, // `codex debug models`, Codex CLI on Luca's Mac, 2026-10-16
+    defaultEffort: "high",
+    upstream: null,
+  }),
+  family({
     name: "sonnet",
     label: "Sonnet",
     provider: "claude",
@@ -188,6 +197,7 @@ export const RELEASED_PAIRS = [
   { pair: "grok:grok-4.6", family: "grok" },
   { pair: "grok:grok-4.7", family: "grok" },
   { pair: "codex:gpt-6-luna", family: "luna" },
+  { pair: "codex:gpt-6-astra", family: "astra" },
   { pair: "claude:sonnet", family: "sonnet" },
   { pair: "claude:claude-opus-5-5", family: "opus-5-5" },
   { pair: "devin:swe-2", family: "swe-2" },
