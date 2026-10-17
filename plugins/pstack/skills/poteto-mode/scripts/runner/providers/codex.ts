@@ -55,8 +55,6 @@ function parse(stdout: string): ParseResult {
   };
 }
 
-// luca fork: an optional Codex profile layer trims what a one-shot lane loads
-// (skills, MCP servers, features). Absent file, unchanged upstream argv.
 export const LANE_PROFILE = "pstack-lane";
 
 export function laneProfileArgs(codexHome = process.env.CODEX_HOME || join(homedir(), ".codex")): string[] {
