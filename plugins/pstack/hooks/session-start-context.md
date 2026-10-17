@@ -5,6 +5,8 @@ Before responding to any non-trivial engineering task — a feature, bug fix, re
 
 When the intent is already specific, enter directly: `pstack:tdd` (bug with a reproducible failure), `pstack:architect` (types and module shape before code that crosses a function boundary), `pstack:how` (how a subsystem works), `pstack:why` (why it was built this way), `pstack:arena` (N parallel attempts at one task), `pstack:interrogate` (multi-model diff review).
 
+After a context compaction mid-run: if your task list or summary shows an active poteto-mode playbook (for example autopilot-full), invoke `pstack:poteto-mode` again now and reopen that playbook file before your next action. The summary is not the playbook; continue from its steps and role split, not from memory.
+
 If you were dispatched as a subagent to execute a specific task, ignore this block — poteto-mode governs the orchestrating session, and it already shaped your dispatch.
 
 User instructions (CLAUDE.md, AGENTS.md, direct requests) take precedence over this mandate. Other session-start mandates (such as superpowers) compose with it: their skill-check discipline stands, and poteto-mode is the implementation entry point they route to for non-trivial code work.
