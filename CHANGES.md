@@ -3,6 +3,10 @@
 Mergify auto-queue is live: ready PRs to main require passing verify, Unfret and exact-head live-gate, and no unresolved review thread; workflow changes require operator queueing.
 This port applies the Cursor → Claude Code substitutions in skill bodies. Earlier drafts left them flagged; this revision resolves them. A later pass added a Codex build that shares the same skills; see [Codex port](#codex-port) below.
 
+## 1.15.0-luca.4 keeps four local fork changes
+
+This fork tracks Open Pstack 1.15.0. It registers the `codex:gpt-6-astra` family, passes `--profile pstack-lane` to Codex lanes when that profile file exists, reopens the active playbook after a compaction through the SessionStart hook, and has autopilot-full arm its hourly audit loop before the first owner.
+
 ## 1.15.0 runs Devin, agy and dsh lanes in any repository
 
 Open Pstack 1.15.0 keeps the Cursor pstack 0.15.25 sync. It ships PR #215, merged after 1.14.0. Default roles and panels are unchanged.
