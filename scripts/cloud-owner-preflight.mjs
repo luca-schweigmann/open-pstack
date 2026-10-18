@@ -13,7 +13,7 @@ try {
   const forkCommit = execFileSync("git", ["-C", forkRoot, "rev-parse", "--verify", "HEAD^{commit}"], { encoding: "utf8" }).trim();
   const sourceSkills = join(forkRoot, "plugins/pstack/skills");
   const installedSkills = join(projectRoot, ".agents/skills");
-  const required = ["poteto-mode/references/cloud-owner-contract.md"];
+  const required = ["poteto-mode/references/cloud-owner-contract.md", "deslop/SKILL.md", "no-comments/SKILL.md", "principle-prove-it-works/SKILL.md"];
   const linkedSkills = [];
   mkdirSync(installedSkills, { recursive: true });
   const installedRelative = relative(projectRoot, realpathSync(installedSkills));
@@ -54,7 +54,7 @@ try {
     if (isAbsolute(forkRelative) || forkRelative === ".." || forkRelative.startsWith(`..${sep}`) || resolvedInstalled !== resolvedSource) {
       throw new Error(`Installed skill does not resolve to the fork checkout: ${skill}`);
     }
-    if (!statSync(installed).isFile() || !readFileSync(installed, "utf8").trim()) {
+    if (!statSync(installed).isFile() || statSync(installed).size === 0) {
       throw new Error(`Missing or empty skill: ${skill}`);
     }
     availableFiles.push(relative(projectRoot, installed));

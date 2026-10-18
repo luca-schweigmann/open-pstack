@@ -6,7 +6,7 @@ import { join, resolve } from "node:path";
 import { test } from "node:test";
 
 const script = resolve("scripts/cloud-owner-preflight.mjs");
-const required = ["poteto-mode/references/cloud-owner-contract.md"];
+const required = ["poteto-mode/references/cloud-owner-contract.md", "deslop/SKILL.md", "no-comments/SKILL.md", "principle-prove-it-works/SKILL.md"];
 
 test("Cloud owner preflight checks the installed checkout through its CLI", () => {
   const root = mkdtempSync(join(tmpdir(), "pstack-preflight-"));
@@ -63,6 +63,12 @@ test("Cloud owner preflight checks the installed checkout through its CLI", () =
     blocked(run());
     blocked(run(fork, project, "extra"));
     blocked(run(join(root, "missing"), project));
+    for (const skill of required.slice(1)) {
+      const missing = join(skills, skill);
+      rmSync(missing);
+      blocked(run(fork, project));
+      writeFileSync(missing, "skill\n");
+    }
     const file = join(skills, required[0]);
     writeFileSync(file, "");
     blocked(run(fork, project));

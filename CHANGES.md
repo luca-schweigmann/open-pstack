@@ -3,6 +3,12 @@
 Mergify auto-queue is live: ready PRs to main require passing verify, Unfret and exact-head live-gate, and no unresolved review thread; workflow changes require operator queueing.
 This port applies the Cursor → Claude Code substitutions in skill bodies. Earlier drafts left them flagged; this revision resolves them. A later pass added a Codex build that shares the same skills; see [Codex port](#codex-port) below.
 
+## 1.15.0-luca.8 bounds Autopilot verification overhead
+
+Autopilot-full uses one verifier per head, a second for a named coverage gap, and more only with the operator's explicit go. A short verifier card replaces startup manuals; fix rounds use fresh agents for the same owner role with merged scope and one branch writer. Helpers use blocking waits. The owner card records helper handles, rewrite safeguards and linked gate receipts. Preflight checks required quality skills without loading them. Capacity rejections wait rather than drop out.
+
+Thread usage is filtered by run window and repository, split into token categories and model turns, and grouped by repository and PR. Owner usage after code-ready and verifier/fix usage count as overhead. Spawn trees inferred from named roles or supplied with `--root-thread` bound the run: unassigned children fail the check and remain run-level overhead; foreign sessions are excluded. The hourly audit checks the verifier count and overhead-to-owner ratio.
+
 ## 1.15.0-luca.7 trims the Cloud adaptation
 
 Autopilot-full retains upstream owner duties, consolidated findings and verification rounds. Its swarm uses one worker when that worker covers the changed flow, diff and receipts, adding lanes only for named coverage gaps. Cloud owners start with one short card and project AGENTS.md. The card owns blocking waits, status and gate evidence: verifiers validate receipts and repeat only missing, stale or contradicted gates, plus a live run. Cloud merges stay with the local root at the exact verified head; native owners keep upstream owner-merges. Thread names carry a PR or slice and role. Duplicate runner budgets, queue audits and instruction-reading lists are removed. Model routing and the upstream hourly audit remain.
