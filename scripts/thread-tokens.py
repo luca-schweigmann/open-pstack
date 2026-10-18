@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import argparse
+import csv
 from datetime import datetime
 import json
 import os
@@ -18,15 +19,20 @@ def thread_name(thread):
     title = (thread.get("title") or "").strip()
     if title:
         return title
+    path = agent_path(thread)
+    if path:
+        return path.rsplit("/", 1)[-1]
+    return (thread.get("first_user_message") or (thread.get("name") if "title" not in thread else "") or "").strip()
+
+
+def agent_path(thread):
     source = thread.get("source")
     try:
         source = json.loads(source) if isinstance(source, str) else source
         path = source["subagent"]["thread_spawn"]["agent_path"]
     except (ValueError, KeyError, TypeError):
-        path = None
-    if isinstance(path, str) and path.strip().rstrip("/"):
-        return path.strip().rstrip("/").rsplit("/", 1)[-1]
-    return (thread.get("first_user_message") or (thread.get("name") if "title" not in thread else "") or "").strip()
+        return None
+    return path.strip().rstrip("/") if isinstance(path, str) and path.strip().rstrip("/") else None
 
 
 def named_role(name):
@@ -35,6 +41,21 @@ def named_role(name):
         return ("PR #" + match["pr"] if match["pr"] else "slice:" + match["slice"], match["role"])
     match = HANDLE.fullmatch(name)
     return ("PR #" + match["pr"], match["role"]) if match else None
+
+
+def child_roles(paths):
+    roles = {}
+    for path in paths:
+        with path.open(newline="") as stream:
+            rows = csv.DictReader(stream, delimiter="\t")
+            if not {"handle", "role"} <= set(rows.fieldnames or []):
+                raise ValueError("children TSV requires handle and role columns")
+            for row in rows:
+                handle = (row["handle"] or "").strip().rstrip("/")
+                role = named_role((row["role"] or "").strip())
+                if handle and role:
+                    roles[handle] = role
+    return roles
 
 
 def default_database():
@@ -114,6 +135,11 @@ def main():
     parser.add_argument("--until", type=int, default=2**63 - 1, help="Exclusive epoch milliseconds")
     parser.add_argument("--repo", help="Exact git_origin_url or cwd")
     parser.add_argument("--root-thread", action="append", default=[], help="Build-chat ID; repeat for independent spawn trees (inferred from named roles only when omitted)")
+    parser.add_argument("--children-tsv", type=Path, action="append", default=[],
+                        help="Run children.tsv with handle and role columns; handle is exact thread ID or full agent_path, "
+                             "role is PR #N or slice:id followed by owner/verifier/fix. Last matching row wins, "
+                             "including slice-to-PR updates; overrides inferred names within the selected roots only. "
+                             "Repeat in chronological order for multiple registers.")
     parser.add_argument("--check", action="store_true")
     parser.add_argument("--cloud-owner", action="append", default=[], type=json.loads,
                         help='Cloud start receipt as JSON [repository, "PR #N" or "slice:id", task ID]; repeat per owner')
@@ -134,6 +160,7 @@ def main():
     violations = []
     hints = []
     try:
+        bindings = child_roles(args.children_tsv)
         with sqlite3.connect(args.database.resolve().as_uri() + "?mode=ro", uri=True) as database:
             database.row_factory = sqlite3.Row
             columns = {row[1] for row in database.execute("PRAGMA table_info(threads)")}
@@ -155,7 +182,8 @@ def main():
             if not set(args.root_thread) <= known_ids:
                 parser.error("Unknown --root-thread ID")
             roots = set(args.root_thread) if args.root_thread else {
-                root(thread["id"]) for thread in threads if named_role(thread["resolved_name"])}
+                root(thread["id"]) for thread in threads
+                if thread["id"] in bindings or agent_path(thread) in bindings or named_role(thread["resolved_name"])}
 
             def in_tree(thread_id):
                 seen = set()
@@ -167,6 +195,16 @@ def main():
                         return False
                     thread_id = parents[thread_id]
                 return False
+
+            bound_handles = {}
+            for thread in threads:
+                if not in_tree(thread["id"]):
+                    continue
+                handle = thread["id"] if thread["id"] in bindings else agent_path(thread)
+                if handle in bindings:
+                    if handle in bound_handles:
+                        raise ValueError("Ambiguous children handle; bind exact thread IDs instead: " + handle)
+                    bound_handles[handle] = thread["id"]
 
             for thread in threads:
                 if args.repo and args.repo not in (thread["git_origin_url"], thread["cwd"]):
@@ -182,7 +220,7 @@ def main():
                 if not selected and not created_in_window:
                     continue
                 fallback_threads += int(fallback)
-                role = named_role(thread["resolved_name"])
+                role = bindings.get(thread["id"]) or bindings.get(agent_path(thread)) or named_role(thread["resolved_name"])
                 if not role:
                     if thread["id"] in parents and not thread["resolved_name"]:
                         violations.append(f"unnamed child: {thread['id']} (parent {parents[thread['id']]})")

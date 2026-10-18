@@ -50,3 +50,12 @@ INSERT INTO thread_spawn_edges VALUES
 ('foreign-root', 'foreign-a', 'completed'),
 ('foreign-root', 'foreign-b', 'completed'),
 ('foreign-root', 'foreign-c', 'completed');
+
+INSERT INTO threads (id, title, source, tokens_used, created_at_ms, git_origin_url, cwd) VALUES
+('prepr-owner', '', '{"subagent":{"thread_spawn":{"agent_path":"/root/b2u_owner"}}}', 300, 4000, 'repo-native', '/native'),
+('prepr-verifier', '', '{"subagent":{"thread_spawn":{"agent_path":"/root/pr226_verifier"}}}', 10, 4000, 'repo-native', '/native'),
+('foreign-prepr-owner', '', '{"subagent":{"thread_spawn":{"agent_path":"/root/b2u_owner"}}}', 9000, 4000, 'repo-native', '/native');
+INSERT INTO thread_spawn_edges VALUES
+('native-root', 'prepr-owner', 'completed'),
+('native-root', 'prepr-verifier', 'completed'),
+('foreign-root', 'foreign-prepr-owner', 'completed');

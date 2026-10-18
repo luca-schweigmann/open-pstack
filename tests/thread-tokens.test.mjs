@@ -87,6 +87,32 @@ test("token CLI checks run-window phases, repository isolation and unassigned ov
     const both = run("--since", "3000", "--until", "3001", "--root-thread", "native-root", "--root-thread", "foreign-root");
     assert.equal(Object.keys(JSON.parse(both.stdout).groups).length, 2);
     assert.equal(run("--root-thread", "missing").status, 2);
+    const unbound = run("--since", "4000", "--until", "4001", "--root-thread", "native-root", "--check");
+    assert.equal(unbound.status, 1);
+    assert.equal(Object.values(JSON.parse(unbound.stdout).groups)[0].O.unknown_tokens, 0);
+    const children = join(directory, "children.tsv");
+    writeFileSync(children, "handle\trole\tstate\tscope\n"
+      + "/root/b2u_owner\tslice:B2u owner\trunning\tbefore PR\n"
+      + "/root/b2u_owner\tPR #226 owner Personenfilter\tHOLD\tafter PR\n");
+    const bound = run("--since", "4000", "--until", "4001", "--root-thread", "native-root", "--children-tsv", children, "--check");
+    assert.equal(bound.status, 0, bound.stderr);
+    const boundReport = JSON.parse(bound.stdout);
+    assert.deepEqual(Object.keys(boundReport.groups), [JSON.stringify(["repo-native", "PR #226"])]);
+    const boundGroup = Object.values(boundReport.groups)[0];
+    assert.equal(boundGroup.O.unknown_tokens, 300, "foreign owner with the same path stays excluded");
+    assert.equal(boundGroup.H.unknown_tokens, 10);
+    assert.equal(boundGroup.verifier_threads, 1);
+    assert.equal(boundReport.unassigned.threads, 0);
+    const ambiguous = run("--since", "4000", "--until", "4001", "--root-thread", "native-root", "--root-thread", "foreign-root", "--children-tsv", children);
+    assert.equal(ambiguous.status, 1);
+    assert.match(ambiguous.stderr, /Ambiguous children handle/);
+    writeFileSync(children, "handle\trole\nprepr-owner\tPR #226 owner\n");
+    const byId = run("--since", "4000", "--until", "4001", "--root-thread", "native-root", "--children-tsv", children, "--check");
+    assert.equal(byId.status, 0, byId.stderr);
+    writeFileSync(children, "wrong\theader\n");
+    const malformed = run("--root-thread", "native-root", "--children-tsv", children);
+    assert.equal(malformed.status, 1);
+    assert.match(malformed.stderr, /requires handle and role columns/);
     const defaultState = join(directory, "state_5.sqlite");
     writeFileSync(defaultState, before);
     const implicitDatabase = spawnSync("python3", [resolve("scripts/thread-tokens.py"), "--root-thread", "foreign-root", "--check"],
