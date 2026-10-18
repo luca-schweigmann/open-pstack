@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { execFileSync, spawnSync } from "node:child_process";
-import { mkdtempSync, mkdirSync, writeFileSync, symlinkSync, rmSync } from "node:fs";
+import { mkdtempSync, mkdirSync, readFileSync, writeFileSync, symlinkSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { test } from "node:test";
@@ -15,14 +15,13 @@ test("Cloud owner preflight checks the installed checkout through its CLI", () =
     const project = join(root, "project");
     const skills = join(fork, "plugins/pstack/skills");
     mkdirSync(skills, { recursive: true });
-    mkdirSync(join(project, ".agents"), { recursive: true });
+    mkdirSync(join(project, ".agents/skills"), { recursive: true });
     for (const path of required) {
       const file = join(skills, path);
       mkdirSync(resolve(file, ".."), { recursive: true });
       writeFileSync(file, "skill\n");
     }
     writeFileSync(join(project, "AGENTS.md"), "project rules\n");
-    symlinkSync(skills, join(project, ".agents/skills"));
     execFileSync("git", ["init", "-q", fork]);
     execFileSync("git", ["-C", fork, "-c", "user.name=Preflight", "-c", "user.email=preflight@example.invalid", "commit", "--allow-empty", "-qm", "fixture"]);
     const run = (...args) => spawnSync(process.execPath, [script, ...args], { encoding: "utf8" });
@@ -38,6 +37,29 @@ test("Cloud owner preflight checks the installed checkout through its CLI", () =
     assert.deepEqual(evidence.skillPaths, { source: "plugins/pstack/skills", installed: ".agents/skills" });
     assert.deepEqual(evidence.readFiles, [...required.map(path => `.agents/skills/${path}`), "AGENTS.md"]);
     assert.ok(!ok.stdout.includes(root));
+    const installed = [...new Set(required.map(path => path.split("/")[0]))].map(skill => `.agents/skills/${skill}`);
+    assert.deepEqual(evidence.linkedSkills, installed);
+    assert.deepEqual(JSON.parse(run(fork, project).stdout).linkedSkills, []);
+    const slot = join(project, installed[0]);
+    rmSync(slot);
+    symlinkSync(join(root, "missing"), slot);
+    assert.deepEqual(JSON.parse(run(fork, project).stdout).linkedSkills, [installed[0]]);
+    rmSync(slot);
+    symlinkSync(join(skills, "deslop"), slot);
+    assert.deepEqual(JSON.parse(run(fork, project).stdout).linkedSkills, [installed[0]]);
+    rmSync(slot);
+    writeFileSync(slot, "preserve file\n");
+    const conflict = run(fork, project);
+    blocked(conflict);
+    assert.match(JSON.parse(conflict.stderr).reason, /existing file or directory; preserved/);
+    assert.equal(readFileSync(slot, "utf8"), "preserve file\n");
+    rmSync(slot);
+    mkdirSync(slot);
+    writeFileSync(join(slot, "keep"), "preserve directory\n");
+    blocked(run(fork, project));
+    assert.equal(readFileSync(join(slot, "keep"), "utf8"), "preserve directory\n");
+    rmSync(slot, { recursive: true });
+    assert.equal(run(fork, project).status, 0);
     blocked(run());
     blocked(run(fork, project, "extra"));
     blocked(run(join(root, "missing"), project));
@@ -61,7 +83,7 @@ test("Cloud owner preflight checks the installed checkout through its CLI", () =
     writeFileSync(join(project, "AGENTS.md"), "");
     blocked(run(fork, project));
     writeFileSync(join(project, "AGENTS.md"), "rules\n");
-    rmSync(join(project, ".agents/skills"));
+    rmSync(join(project, ".agents/skills"), { recursive: true });
     symlinkSync(join(root, "fork-sibling"), join(project, ".agents/skills"));
     blocked(run(fork, project));
   } finally {
