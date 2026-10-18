@@ -3,7 +3,7 @@
 Mergify auto-queue is live: ready PRs to main require passing verify, Unfret and exact-head live-gate, and no unresolved review thread; workflow changes require operator queueing.
 This port applies the Cursor → Claude Code substitutions in skill bodies. Earlier drafts left them flagged; this revision resolves them. A later pass added a Codex build that shares the same skills; see [Codex port](#codex-port) below.
 
-## Unreleased
+## 1.15.0-luca.10 drops reflexive test-first guidance
 
 Local adaptation (#228): bug-fix step 5 and the sequencing principle use repro/baseline-then-fix proof without a required failing-test commit; a regression test only where no E2E would catch a recurrence. Refactoring step 1 uses the flow's existing deterministic E2E and adds the smallest behavior pin only for risky, uncovered moves. The type-checked build remains a build step. Session-start no longer suggests direct TDD entry. Other test guidance is unchanged.
 
