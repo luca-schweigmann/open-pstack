@@ -22,3 +22,31 @@ INSERT INTO thread_spawn_edges VALUES
 ('root', '1', 'completed'), ('root', '2', 'completed'),
 ('root', '3', 'completed'), ('root', '4', 'completed'), ('root', '5', 'completed'),
 ('root', '10', 'completed');
+
+ALTER TABLE threads ADD COLUMN title TEXT;
+ALTER TABLE threads ADD COLUMN source TEXT;
+ALTER TABLE threads ADD COLUMN first_user_message TEXT;
+UPDATE threads SET title = name;
+
+INSERT INTO threads (id, title, source, first_user_message, tokens_used, created_at_ms, git_origin_url, cwd) VALUES
+('native-root', 'build', NULL, NULL, 0, 3000, 'repo-native', '/native'),
+('native-owner', '', '{"subagent":{"thread_spawn":{"agent_path":"/root/pr218_gate_owner"}}}', 'PR #99 verifier ignored', 300, 3000, 'repo-native', '/native'),
+('native-verifier', '', '{"subagent":{"thread_spawn":{"agent_path":"/root/pr218_verifier"}}}', '', 10, 3000, 'repo-native', '/native'),
+('native-title', 'PR #218 owner title wins', '{"subagent":{"thread_spawn":{"agent_path":"/root/pr99_verifier"}}}', 'PR #98 verifier ignored', 300, 3000, 'repo-native', '/native'),
+('native-message', '', '{invalid-json', 'PR #218 fix message fallback', 5, 3000, 'repo-native', '/native'),
+('native-helper', '', '{"subagent":{"thread_spawn":{"agent_path":"/root/pickup_authority/"}}}', '', 5, 3000, 'repo-native', '/native'),
+('native-unnamed', '', '"cli"', '', 0, 3000, 'repo-native', '/native'),
+('foreign-root', 'other build', NULL, NULL, 0, 3000, 'repo-native', '/native'),
+('foreign-a', 'PR #34 verifier one', NULL, NULL, 10, 3000, 'repo-native', '/native'),
+('foreign-b', 'PR #34 verifier two', NULL, NULL, 10, 3000, 'repo-native', '/native'),
+('foreign-c', 'PR #34 verifier three', NULL, NULL, 10, 3000, 'repo-native', '/native');
+INSERT INTO thread_spawn_edges VALUES
+('native-root', 'native-owner', 'completed'),
+('native-owner', 'native-verifier', 'completed'),
+('native-root', 'native-title', 'completed'),
+('native-root', 'native-message', 'completed'),
+('native-root', 'native-helper', 'completed'),
+('native-root', 'native-unnamed', 'completed'),
+('foreign-root', 'foreign-a', 'completed'),
+('foreign-root', 'foreign-b', 'completed'),
+('foreign-root', 'foreign-c', 'completed');

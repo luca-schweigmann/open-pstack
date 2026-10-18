@@ -2,6 +2,7 @@
 import argparse
 from datetime import datetime
 import json
+import os
 from pathlib import Path
 import re
 import sqlite3
@@ -9,7 +10,38 @@ import sqlite3
 
 FIELDS = ("uncached_input", "cached_input", "output", "model_turns", "unknown_tokens")
 NAME = re.compile(r"^(?:PR #(?P<pr>[1-9][0-9]*)|slice:(?P<slice>[^\s]+)) (?P<role>owner|verifier|fix)(?:\s|$)")
+HANDLE = re.compile(r"^pr(?P<pr>[1-9][0-9]*)_(?:[a-z0-9]+_)*(?P<role>owner|verifier|fix)$")
 READY = re.compile(r'"state"\s*:\s*"code-ready"')
+
+
+def thread_name(thread):
+    title = (thread.get("title") or "").strip()
+    if title:
+        return title
+    source = thread.get("source")
+    try:
+        source = json.loads(source) if isinstance(source, str) else source
+        path = source["subagent"]["thread_spawn"]["agent_path"]
+    except (ValueError, KeyError, TypeError):
+        path = None
+    if isinstance(path, str) and path.strip().rstrip("/"):
+        return path.strip().rstrip("/").rsplit("/", 1)[-1]
+    return (thread.get("first_user_message") or (thread.get("name") if "title" not in thread else "") or "").strip()
+
+
+def named_role(name):
+    match = NAME.match(name)
+    if match:
+        return ("PR #" + match["pr"] if match["pr"] else "slice:" + match["slice"], match["role"])
+    match = HANDLE.fullmatch(name)
+    return ("PR #" + match["pr"], match["role"]) if match else None
+
+
+def default_database():
+    directory = Path(os.environ.get("CODEX_HOME", Path.home() / ".codex"))
+    candidates = [path for path in directory.glob("state_*.sqlite")
+                  if path.stem.removeprefix("state_").isdigit()]
+    return max(candidates, key=lambda path: int(path.stem.removeprefix("state_"))) if candidates else directory / "state_5.sqlite"
 
 
 def empty():
@@ -77,11 +109,11 @@ def usage_events(thread, directory):
 
 def main():
     parser = argparse.ArgumentParser(description="Read run-window token usage by repository, PR/slice and phase.")
-    parser.add_argument("database", type=Path)
+    parser.add_argument("database", type=Path, nargs="?", default=default_database())
     parser.add_argument("--since", type=int, default=0, help="Inclusive epoch milliseconds")
     parser.add_argument("--until", type=int, default=2**63 - 1, help="Exclusive epoch milliseconds")
     parser.add_argument("--repo", help="Exact git_origin_url or cwd")
-    parser.add_argument("--root-thread", action="append", default=[], help="Build-chat ID; repeat for independent spawn trees (also inferred from named roles)")
+    parser.add_argument("--root-thread", action="append", default=[], help="Build-chat ID; repeat for independent spawn trees (inferred from named roles only when omitted)")
     parser.add_argument("--check", action="store_true")
     parser.add_argument("--cloud-owner", action="append", default=[], type=json.loads,
                         help='Cloud start receipt as JSON [repository, "PR #N" or "slice:id", task ID]; repeat per owner')
@@ -104,7 +136,12 @@ def main():
     try:
         with sqlite3.connect(args.database.resolve().as_uri() + "?mode=ro", uri=True) as database:
             database.row_factory = sqlite3.Row
-            threads = list(database.execute("SELECT id, name, tokens_used, created_at_ms, rollout_path, git_origin_url, cwd FROM threads"))
+            columns = {row[1] for row in database.execute("PRAGMA table_info(threads)")}
+            fields = ["id", "tokens_used", "created_at_ms", "rollout_path", "git_origin_url", "cwd"]
+            fields += [field for field in ("title", "source", "first_user_message", "name") if field in columns]
+            threads = [dict(row) for row in database.execute("SELECT " + ", ".join(fields) + " FROM threads")]
+            for thread in threads:
+                thread["resolved_name"] = thread_name(thread)
             parents = dict(database.execute("SELECT child_thread_id, parent_thread_id FROM thread_spawn_edges"))
 
             def root(thread_id):
@@ -117,8 +154,8 @@ def main():
             known_ids = {thread["id"] for thread in threads}
             if not set(args.root_thread) <= known_ids:
                 parser.error("Unknown --root-thread ID")
-            roots = {root(thread["id"]) for thread in threads if NAME.match(thread["name"] or "")}
-            roots.update(args.root_thread)
+            roots = set(args.root_thread) if args.root_thread else {
+                root(thread["id"]) for thread in threads if named_role(thread["resolved_name"])}
 
             def in_tree(thread_id):
                 seen = set()
@@ -136,33 +173,33 @@ def main():
                     continue
                 if thread["created_at_ms"] is not None and thread["created_at_ms"] >= args.until:
                     continue
+                if not in_tree(thread["id"]):
+                    excluded_foreign_threads += 1
+                    continue
                 events, ready, fallback = usage_events(thread, args.database.resolve().parent)
                 selected = [(stamp, usage) for stamp, usage in events if stamp is not None and args.since <= stamp < args.until]
                 created_in_window = thread["created_at_ms"] is not None and args.since <= thread["created_at_ms"] < args.until
                 if not selected and not created_in_window:
                     continue
-                if not in_tree(thread["id"]):
-                    excluded_foreign_threads += 1
-                    continue
                 fallback_threads += int(fallback)
-                match = NAME.match(thread["name"] or "")
-                if not match:
-                    if thread["id"] in parents:
+                role = named_role(thread["resolved_name"])
+                if not role:
+                    if thread["id"] in parents and not thread["resolved_name"]:
                         violations.append(f"unnamed child: {thread['id']} (parent {parents[thread['id']]})")
                     unassigned["threads"] += 1
                     for _, usage in selected:
                         add(unassigned, usage)
                     continue
                 repo = thread["git_origin_url"] or thread["cwd"] or "unknown"
-                label = "PR #" + match["pr"] if match["pr"] else "slice:" + match["slice"]
+                label, phase_role = role
                 key = json.dumps([repo, label], separators=(",", ":"))
                 group = groups.setdefault(key, {"repo": repo, "item": label, "threads": 0,
                                                "verifier_threads": 0, "usage": empty(), "O": empty(), "H": empty()})
                 group["threads"] += 1
-                group["verifier_threads"] += int(match["role"] == "verifier")
+                group["verifier_threads"] += int(phase_role == "verifier")
                 for stamp, usage in selected:
                     add(group["usage"], usage)
-                    phase = "O" if match["role"] == "owner" and (ready is None or stamp <= ready) else "H"
+                    phase = "O" if phase_role == "owner" and (ready is None or stamp <= ready) else "H"
                     add(group[phase], usage)
         for key, group in sorted(groups.items()):
             owner, overhead = total(group["O"]), total(group["H"])
