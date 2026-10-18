@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { execFileSync } from "node:child_process";
-import { existsSync, readdirSync, realpathSync, writeFileSync, mkdirSync, symlinkSync } from "node:fs";
+import { existsSync, readdirSync, realpathSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -22,18 +22,7 @@ try {
   writeFileSync(join(homedir(), "open-pstack-sha.txt"), `${sha}\n`);
   process.stdout.write(`CLOUD_FORK_SHA=${sha}\nCLOUD_PROJECT=${project}\n`);
   execFileSync(process.execPath, [join(fork, "scripts/cloud-owner-preflight.mjs"), fork, project, "--prepare"], { stdio: "inherit" });
-  const userSkills = join(homedir(), ".agents/skills");
-  mkdirSync(userSkills, { recursive: true });
-  for (const name of readdirSync(join(project, ".agents/skills"))) {
-    const source = join(project, ".agents/skills", name);
-    const target = join(userSkills, name);
-    if (existsSync(target)) {
-      if (realpathSync(target) !== realpathSync(source)) throw new Error(`User skill conflicts with project skill; preserved: ${name}`);
-    } else {
-      symlinkSync(source, target);
-    }
-  }
-  process.stdout.write("CLOUD_OWNER_BOOTSTRAP=pending-catalog\n");
+  process.stdout.write("CLOUD_OWNER_BOOTSTRAP=ok\n");
 } catch (error) {
   process.stderr.write(`${error.message}\n`);
   process.exitCode = 1;

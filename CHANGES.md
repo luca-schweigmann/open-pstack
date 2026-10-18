@@ -5,7 +5,7 @@ This port applies the Cursor → Claude Code substitutions in skill bodies. Earl
 
 ## Unreleased
 
-Cloud owner preparation and runtime catalog validation are separate. Preparation links every pstack skill and reports pending-catalog; only an executor catalog containing pstack and all project skills can pass the preflight. Filesystem errors include the failed path. The Cloud bootstrap resolves the project in Node rather than interpolating a long shell program, and exposes project skills in the user discovery root for executors launched outside the repository. Tracked in #227.
+Cloud owners read original pstack and repository SKILL.md files directly. The file preflight checks readability and emits explicit bootstrap instructions; service catalogs are diagnostic only. Filesystem errors include the failed path. The bootstrap resolves the project in Node instead of interpolating a long shell program. Tracked in #227.
 
 ## 1.15.0-luca.9 reports unavailable Cloud owner usage honestly
 

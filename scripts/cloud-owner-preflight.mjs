@@ -71,16 +71,17 @@ try {
     if (!name) throw new Error(`Missing skill name: .agents/skills/${directory}/SKILL.md`);
     return [name];
   });
-  if (mode !== "--prepare") {
-    if (!catalogPath) throw new Error("Executor skill catalog required; filesystem preparation alone is not a passing preflight");
-    const catalog = JSON.parse(readFileSync(catalogPath === "-" ? 0 : catalogPath, "utf8"));
-    if (catalog.authority !== "executor" || !Array.isArray(catalog.skills)) throw new Error("Expected an executor catalog with a skills array");
-    const names = catalog.skills.map(skill => typeof skill === "string" ? skill : skill.name);
-    const missing = expectedSkills.filter(name => !names.includes(name) && !names.includes(`pstack:${name}`));
-    if (missing.length) throw new Error(`Executor catalog missing skills: ${missing.join(", ")}`);
+  let catalog = { status: "not-queried", gating: false };
+  if (catalogPath) {
+    try { catalog = { status: "reported", gating: false, response: JSON.parse(readFileSync(catalogPath === "-" ? 0 : catalogPath, "utf8")) }; }
+    catch (error) { catalog = { status: "unavailable", gating: false, reason: error.message }; }
   }
+  const bootstrapInstructions = `Read ${join(sourceSkills, "poteto-mode/SKILL.md")} completely. Select its playbook, name roles and gates before owner work. Read applicable repo SKILL.md files completely from ${installedSkills}; for UI use ui-standard/SKILL.md when present. Follow the task's delegation limits.`;
   process.stdout.write(`${JSON.stringify({
-    preflight: mode === "--prepare" ? "pending-catalog" : "ok",
+    preflight: "ok",
+    scope: "readable-files-and-bootstrap-instructions",
+    bootstrapInstructions,
+    catalog,
     forkCommit,
     skillPaths: { source: relative(forkRoot, sourceSkills), installed: relative(projectRoot, installedSkills) },
     availableFiles,
