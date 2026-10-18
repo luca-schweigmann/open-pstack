@@ -31,7 +31,7 @@ The port is editorial, not mechanical. See [CHANGES.md](CHANGES.md) for the full
 
 Summary of structural changes:
 
-- The local Codex Cloud owner route adds a generic owner contract and `scripts/cloud-owner-preflight.mjs`; these are fork-owned additions. The shared remote test runner gate rules, `scripts/check-gate-receipt.mjs`, and its CLI flow test are also fork-owned.
+- The Codex Cloud owner card, `scripts/cloud-owner-preflight.mjs`, compact gate evidence validator `scripts/check-gate-receipt.mjs`, read-only usage tool `scripts/thread-tokens.py`, and their synthetic CLI fixtures are fork-owned additions.
 
 - Plugin content lives at `plugins/pstack/` (with its own `.claude-plugin/plugin.json`). The repo root holds `.claude-plugin/marketplace.json` and the LICENSE / NOTICE / README / CHANGES docs.
 - `.claude-plugin/marketplace.json` added at repo root so the repo is installable via `/plugin marketplace add`. The marketplace's single plugin entry sources from `./plugins/pstack`.

@@ -6,7 +6,7 @@ import { join, resolve } from "node:path";
 import { test } from "node:test";
 
 const script = resolve("scripts/cloud-owner-preflight.mjs");
-const required = ["poteto-mode/SKILL.md", "poteto-mode/playbooks/autopilot-full.md", "poteto-mode/references/cloud-owner-contract.md", "deslop/SKILL.md", "no-comments/SKILL.md", "technical-writing/SKILL.md", "unslop/SKILL.md"];
+const required = ["poteto-mode/references/cloud-owner-contract.md"];
 
 test("Cloud owner preflight checks the installed checkout through its CLI", () => {
   const root = mkdtempSync(join(tmpdir(), "pstack-preflight-"));
@@ -35,7 +35,7 @@ test("Cloud owner preflight checks the installed checkout through its CLI", () =
     const evidence = JSON.parse(ok.stdout);
     assert.equal(evidence.forkCommit, execFileSync("git", ["-C", fork, "rev-parse", "HEAD"], { encoding: "utf8" }).trim());
     assert.deepEqual(evidence.skillPaths, { source: "plugins/pstack/skills", installed: ".agents/skills" });
-    assert.deepEqual(evidence.readFiles, [...required.map(path => `.agents/skills/${path}`), "AGENTS.md"]);
+    assert.deepEqual(evidence.availableFiles, [...required.map(path => `.agents/skills/${path}`), "AGENTS.md"]);
     assert.ok(!ok.stdout.includes(root));
     const installed = [...new Set(required.map(path => path.split("/")[0]))].map(skill => `.agents/skills/${skill}`);
     assert.deepEqual(evidence.linkedSkills, installed);

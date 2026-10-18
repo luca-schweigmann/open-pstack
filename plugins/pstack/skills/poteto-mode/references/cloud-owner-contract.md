@@ -1,37 +1,17 @@
-# Cloud owner contract
+# Cloud owner card
 
-Create the local build root through session_bridge `codex_create_visible_session`, keep it visible, pin it through `codex_move_thread_to_sidebar_section` with `sectionId: "pinned"`, and read back both states before handing it the queue. Do not use `codex_create_thread`. The local build root runs Autopilot-full and owns verdicts, local verification, merge, and live steps. One Cloud owner builds each assigned slice and keeps its branch and PR through repairs. The root runs the configured Luna verify swarm locally on the reported head. Findings return to the same owner and PR. The route's queue and receipt rules live in [provider-dispatch](provider-dispatch.md#codex-cloud-owners).
+Read this card and project AGENTS.md. The parent supplies your slice, checkout, starting SHA, branch and forge identities. Work only in that checkout and branch. First run `node <fork-checkout>/scripts/cloud-owner-preflight.mjs <fork-checkout> <project-checkout>`; on failure report blocked before building. Give any helper the checkout and require it to confirm `git rev-parse --show-toplevel` before work.
 
-## Start with the installed skills
+Build the slice, open the PR early through the GitHub connector, and keep repairs on it. Push completed units and preserve an uncommitted decisions trail with a durable link. Report every new head. Run project-required gates on committed code; finish deslop and no-comments before code-ready. Read individual principles or instructions only when needed. A hold means zero writes. Unexpected branch writes mean stop and report.
 
-Before building, run the fork's `scripts/cloud-owner-preflight.mjs` with the fork checkout and project checkout supplied in the brief. Paste its evidence block into the task. If it fails, report `blocked` and stop without building. A successful block proves file availability and records the fork commit; it does not prove the model has read the instructions.
+## Gate evidence
 
-Then read the installed poteto-mode SKILL.md, the owner duties in [Autopilot-full](../playbooks/autopilot-full.md), this contract, and the project's AGENTS.md. Apply poteto-mode, its relevant principles, deslop, no-comments, and technical-writing. Keep the decisions trail and push each completed unit worth preserving. Project-specific gates, commands, release permissions, and data rules come from the project's AGENTS.md, not this contract. Do not bypass a gate or substitute a weaker model.
+Owner gates run once per relevant head. Post one JSON receipt on the PR: `{"headSha":"<full SHA>","gates":[{"command":"<command>","exitCode":0,"duration":5,"logTail":"passed"}]}`. Duration is seconds. Validate with `node <fork-checkout>/scripts/check-gate-receipt.mjs <receipt.json> <verified-sha>`.
 
-## Ground every Cloud subagent in the project checkout
+Verifiers check required gate coverage, SHA, commands, exit codes, duration and log tail against the diff. Repeat only missing, stale or contradicted gates; a red gate stays red until repaired. Check structure with the same validator. Every verification includes a live run of the changed flow on its real surface and a diff audit. Small fixes and rebases get one verifier on the delta, as the playbook specifies.
 
-For every subagent a Cloud owner starts through `collaboration.spawn_agent`, put the absolute project-checkout path in the brief and use it as the working directory for every command, including commands run by read-only helpers. Require the subagent to begin with `cd <absolute-project-checkout>` and then run `git rev-parse --show-toplevel`. If `cd` or the Git command fails, or the reported top-level path is not the assigned checkout, the subagent must stop before any further work and report the failure to its owner. Do not rely on an inherited working directory: Cloud subagents have been observed starting in `/workspace` outside the repository, where Git exits 128.
+## Wait and report
 
-## Build and report
+Start once, then block until completion; never poll or restart healthy work. Codex: `exec_command` yield 30000, then empty `write_stdin` yield 300000 while running. Outer waits must cover inner waits. Use a runner's blocking wait, CI watch, and blocking agent waits. Keep waits interruptible; elapsed time alone is not failure.
 
-Build and test the assigned slice. Run every gate that the project's AGENTS.md requires on the committed head before reporting code-ready. Use one E2E test per user flow and no new unit tests. When a test is red, rerun only that red test after the repair; do not rerun green tests without a relevant change. Report the actual gate commands and exit codes. Post one PR comment per head with each gate's command, exit code, duration, and log tail, tagged with the full head SHA. The root's verifiers check these receipts and do not re-run green gates, so a missing or vague receipt costs a rerun.
-
-Before submitting a shared remote test runner job, apply the [gate receipt rules](provider-dispatch.md#gate-receipts). Run gates in Cloud whenever Cloud supports them. Record the Cloud limitation for every runner job and set its timeout from gate evidence. Diagnose a red or timed-out job, reduce its scope or resource demand, and record the changed input before resubmission. Never resubmit identical input. Validate the structured receipt with `node <fork-checkout>/scripts/check-gate-receipt.mjs <receipt.json>` before posting it.
-
-Track runner job IDs and enqueue times. After more than `pstack runner queue minutes` in the repository AGENTS.md, default 10 minutes, report `blocked: runner queue` to the root with the job ID and elapsed wait. Continue observing the job. Include your jobs in the root's hourly queue audit.
-
-Use the GitHub connector for PR creation, updates, and check inspection. Do not use `gh` or Origin in Cloud. Push only the assigned branch and keep all repairs on the same PR. Finish deslop and no-comments before handing the head to the root. Keep the trail available through a durable link.
-
-Reports are short and in German. End every turn with the structured status block in [Autopilot-full](../playbooks/autopilot-full.md): `state` is `code-ready`, `blocked`, or `failed`, plus `prUrl`, `headSha`, `gates` with exit codes, and `trailUrl`. A code-ready report needs a PR URL, full current head SHA, and every required gate green. A blocked report names what is missing. Never treat a turn ending as merge permission.
-
-## Keep live work local
-
-Receive no live credentials or real customer data. Do not deploy, run remote database migrations, perform live data steps, merge, or change access. If a task requires any of these, hand it to the local root. Never upload customer data into Cloud.
-
-The local root follows the project's release rule after its pstack verdict:
-
-1. Merge and deploy with rollback are free after green where the repository permits them.
-2. Migrations and data steps also require a recorded restore point, a dry run on a copy, no deletion, and a fresh independent reviewer's OK.
-3. Sending real customer data to a new recipient, permanent deletes, new access, keys, and logins require the operator's decision.
-
-Changes touching real customer data need an Opus or Oracle security review locally before merge. This contract grants no release permission where the repository has none.
+End each turn with JSON: `{"state":"code-ready|blocked|failed","prUrl":null,"headSha":null,"gates":[],"trailUrl":null}`. Code-ready requires the PR URL, full current SHA, green required gates with commands and exit codes, and trail link. Explain a blocker before the block. Never merge, deploy, handle live credentials/customer data, or change access; the local root owns permitted live steps after verification.

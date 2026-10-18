@@ -3,17 +3,11 @@
 Mergify auto-queue is live: ready PRs to main require passing verify, Unfret and exact-head live-gate, and no unresolved review thread; workflow changes require operator queueing.
 This port applies the Cursor → Claude Code substitutions in skill bodies. Earlier drafts left them flagged; this revision resolves them. A later pass added a Codex build that shares the same skills; see [Codex port](#codex-port) below.
 
-## 1.15.0-luca.6 waits for owner and verifier results
+## 1.15.0-luca.7 trims the Cloud adaptation
 
-Autopilot-full passes one blocking-wait policy to owners and verifiers for long commands, station jobs, CI, and subagents. This is a fork-owned addition.
+Autopilot-full retains upstream owner duties, consolidated findings and verification rounds. Its swarm uses one worker when that worker covers the changed flow, diff and receipts, adding lanes only for named coverage gaps. Cloud owners start with one short card and project AGENTS.md. The card owns blocking waits, status and gate evidence: verifiers validate receipts and repeat only missing, stale or contradicted gates, plus a live run. Cloud merges stay with the local root at the exact verified head; native owners keep upstream owner-merges. Thread names carry a PR or slice and role. Duplicate runner budgets, queue audits and instruction-reading lists are removed. Model routing and the upstream hourly audit remain.
 
-## Shared remote test runner gate budgets
-
-Autopilot-full now requires Cloud-first gates, evidence-based runner timeouts, diagnosis and reduced input before retries, queue blocking reports, and hourly queue audits. `scripts/check-gate-receipt.mjs` validates structured gate receipts, including runner timeout budgets, Cloud exclusion reasons, and retry records. Its CLI flow runs through accepted and rejected example receipts in `tests/gate-receipt.test.mjs`. These are fork-owned additions. Runner-side scheduling enforcement is separate.
-
-## 1.15.0-luca.5 adds the Codex Cloud owner route
-
-The optional `pr owners` sheet line can route Autopilot-full owners through `codex-cloud-start`. The parent retains the Cloud thread and receipt, waits through the tool, verifies locally, and sends repairs back to the same owner. Cloud owners use the GitHub connector and receive no live credentials or customer data. For this route, the local root performs the verified expected-head merge and live steps under the repository release rule. Native owners remain the default until the cloud-lane mini run is green. The generated route catalog documents the route without adding a local runner adapter. A generic Cloud owner contract and a fail-closed preflight check the fork commit, installed project skills, and project AGENTS.md before building. Every Cloud subagent must verify its assigned absolute project directory before work and use it for every command. The local root is created through the session bridge as a visible, pinned session with state readback.
+`scripts/thread-tokens.py` reads a supplied Codex SQLite database without writes and groups explicitly named owner, verifier and fix threads by PR or slice. It reports unassigned usage separately and defines overhead as verifier plus fix usage. Only synthetic CLI fixtures are committed.
 
 ## 1.15.0-luca.4 keeps four local fork changes
 

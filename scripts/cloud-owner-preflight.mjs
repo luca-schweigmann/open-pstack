@@ -13,15 +13,7 @@ try {
   const forkCommit = execFileSync("git", ["-C", forkRoot, "rev-parse", "--verify", "HEAD^{commit}"], { encoding: "utf8" }).trim();
   const sourceSkills = join(forkRoot, "plugins/pstack/skills");
   const installedSkills = join(projectRoot, ".agents/skills");
-  const required = [
-    "poteto-mode/SKILL.md",
-    "poteto-mode/playbooks/autopilot-full.md",
-    "poteto-mode/references/cloud-owner-contract.md",
-    "deslop/SKILL.md",
-    "no-comments/SKILL.md",
-    "technical-writing/SKILL.md",
-    "unslop/SKILL.md",
-  ];
+  const required = ["poteto-mode/references/cloud-owner-contract.md"];
   const linkedSkills = [];
   mkdirSync(installedSkills, { recursive: true });
   const installedRelative = relative(projectRoot, realpathSync(installedSkills));
@@ -52,7 +44,7 @@ try {
     symlinkSync(source, installed);
     linkedSkills.push(relative(projectRoot, installed));
   }
-  const readFiles = [];
+  const availableFiles = [];
   for (const skill of required) {
     const installed = join(installedSkills, skill);
     const source = join(sourceSkills, skill);
@@ -65,18 +57,18 @@ try {
     if (!statSync(installed).isFile() || !readFileSync(installed, "utf8").trim()) {
       throw new Error(`Missing or empty skill: ${skill}`);
     }
-    readFiles.push(relative(projectRoot, installed));
+    availableFiles.push(relative(projectRoot, installed));
   }
   const projectRules = join(projectRoot, "AGENTS.md");
   if (!statSync(projectRules).isFile() || !readFileSync(projectRules, "utf8").trim()) {
     throw new Error("Missing or empty project AGENTS.md");
   }
-  readFiles.push(relative(projectRoot, projectRules));
+  availableFiles.push(relative(projectRoot, projectRules));
   process.stdout.write(`${JSON.stringify({
     preflight: "ok",
     forkCommit,
     skillPaths: { source: relative(forkRoot, sourceSkills), installed: relative(projectRoot, installedSkills) },
-    readFiles,
+    availableFiles,
     linkedSkills,
   }, null, 2)}\n`);
 } catch (error) {

@@ -91,11 +91,9 @@ Every concurrent external lane needs distinct prompt, output, and receipt paths.
 
 ## Codex Cloud owners
 
-`codex-cloud:<env>` is an owner route descriptor, with the exact published Cloud environment name as `<env>`. It runs the Codex Sol family in the [model matrix](model-catalog.md#model-matrix) inside Cloud, not a local CLI. The parent checks the launch readback for the assigned environment, full access, and Sol model; a mismatch fails the start. It never sends this descriptor to `pstack-runner` or treats `<env>` as a model. Autopilot-full first reads the repository AGENTS.md line `pstack pr owners: codex-cloud:<env>`. This optional line overrides the `pr owners` sheet line for that repository. Without the repository line, use the sheet. If the sheet omits `pr owners`, owners use `feature, refactoring`. Until the cloud-lane mini run is green, keep owners on the native Codex lane. Switching routes requires an explicit repository or sheet choice, never a fallback.
+`codex-cloud:<env>` selects a Cloud environment, not a provider/model pair or runner adapter. Resolve the repository AGENTS.md `pstack pr owners:` line, then the sheet's `pr owners`, then `feature, refactoring`. Cloud uses the catalog's Sol family; read back the environment, full access, and assigned model and reject any mismatch before accepting a launch. Until the Cloud mini run passes, use native Codex; never silently fall back after a failed Cloud launch.
 
-Cloud setup clones `https://github.com/luca-schweigmann/open-pstack` at branch `luca` into a dedicated fork checkout and records its exact commit. Install its shared skills as project-local `.agents/skills/<skill>` symlinks to `<fork-checkout>/plugins/pstack/skills/<skill>`, preserving existing unrelated skills and failing on conflicting names. Start a fresh Cloud task after setup so Codex discovers them. The separate setup template owns provisioning; this route does not install or change the operator's local plugin. The brief supplies both checkout paths. Its first action runs `node <fork-checkout>/scripts/cloud-owner-preflight.mjs <fork-checkout> <project-checkout>`, records the evidence, and then reads the installed instructions and [owner contract](cloud-owner-contract.md). Preflight failure is a valid `blocked` owner report, not permission to build without skills.
-
-The local parent launches one task per slice with a file containing the owner brief:
+Setup provisions the selected fork revision and project-local skill links. The parent supplies the fork and project checkout, slice, starting SHA, branch and forge identities, and the [owner card](cloud-owner-contract.md) plus project AGENTS.md. No full skill or manual read is required. Preflight checks availability, not that a model has read files.
 
 ```sh
 codex-cloud-start --env <env> --prompt-file <brief> --branch <branch>
@@ -103,44 +101,9 @@ codex-cloud-start --read <threadId> --wait <seconds>
 codex-cloud-start --send <threadId> --prompt-file <findings>
 ```
 
-Pass arguments as an argv array or quote every path. The start result's `threadId` is the persistent background handle. Store it in the run's receipt and `children.tsv`; use the same handle for reads and fix-forward messages. The parent waits on every active owner with blocking `--read --wait`, records each result, and continues waiting when a healthy task is still running. Do not add a hand polling loop or a runtime deadline. The root maintains a per-project queue with at most five occupied Cloud-owner slots. A slot stays occupied through code-ready, verification, blocked turns, and fix-forward rounds, until the item is terminal: merged or explicitly abandoned. When a slot becomes free, start the next queued item. A tool refusal at a full pool is only a safety net: wait until a slot is free, then retry that queued launch; it is not a dropout. An owner turn ending or failing does not itself free its slot; retain the item while repairing or replacing its owner, or explicitly abandon it.
+Retain `threadId` in `children.tsv` with the PR or slice ID and role. Keep a run receipt with environment, branch, starting/current SHA, PR URL, status and failure evidence. Limit each project to five occupied Cloud items; release a slot only on merge or explicit abandonment, not when a turn ends. Wait through blocking `--read --wait`; healthy runtime is unlimited. Send consolidated findings through the retained handle on the same PR. Replace an owner only on affirmative failure, using the playbook's dropout rules.
 
-The parent maintains a run-owned receipt with `threadId`, `env`, `branch`, `prUrl`, `startHeadSha`, `currentHeadSha`, `status`, `lastPollTime`, and `dropoutReason`. Use UTC timestamps, record the exact starting branch SHA in the brief, and preserve it as `startHeadSha`. Keep unknown fields null, update the current head and PR from each validated owner report, and retain failure evidence. This receipt is separate from the external runner's receipt schema. The owner status block is defined in [Autopilot-full](../playbooks/autopilot-full.md).
-
-A failed start, unreachable thread, explicit task failure, or missing or invalid status block at the end of an owner turn is a dropout. A running turn needs no terminal status block. A valid `blocked` report is waiting for the root or operator, not a dropout; answer it through the retained handle. Long-running work is never a dropout. Record the reason and apply the calling playbook's dropout policy without silently replacing the Cloud route with a native lane or another model. External runner exit-code and model-proof rules below apply only to that runner.
-
-### Gate receipts
-
-Post a structured JSON gate receipt on the PR for each reported head. Set `headSha` to the full commit SHA. Each entry in `gates` carries `command`, integer `exitCode`, `duration` in seconds, `logTail`, and `route`. Use `cloud`, `shared-remote-test-runner`, or `local` as the route. The shared remote test runner is shared by projects. Run every gate Cloud supports in Cloud. Reserve `local` for work that requires the local platform.
-
-Before submitting a shared remote test runner job, set and record `timeout` in seconds and `route-reason`, explaining what Cloud cannot run. Select its `budget` in this order:
-
-1. With a last evidenced duration, use `kind: "measured"`, its `seconds`, and an `evidence` reference to that receipt. Set `timeout` to `max(60, ceil(seconds * 2))`.
-2. Without a measurement, use the explicit gate budget in the repository AGENTS.md. Record `kind: "repo"`, its `seconds`, and the AGENTS.md budget reference as `evidence`. Set `timeout` to that budget.
-3. Without either, use `kind: "first-run"` and a timeout of at most 900 seconds. Record the measured duration for subsequent jobs.
-
-Never use a two-hour default. These explicit gate-job timeouts do not impose a runtime deadline on an owner or model lane.
-
-After a red or timed-out job, diagnose it and reduce its scope or resource demand before resubmitting changed input. Add `retry` with `diagnosis` and `change` to its receipt. Never resubmit identical input. The root and verifiers check these claims against the job record.
-
-For example, a runner gate entry with a previous five-second measurement includes:
-
-```json
-{
-  "command": "run-e2e --flow smoke",
-  "exitCode": 0,
-  "duration": 5,
-  "logTail": "passed",
-  "route": "shared-remote-test-runner",
-  "timeout": 60,
-  "route-reason": "Cloud lacks the required device",
-  "budget": {"kind": "measured", "seconds": 5, "evidence": "previous gate receipt"}
-}
-```
-
-Before accepting a receipt, run `node <fork-checkout>/scripts/check-gate-receipt.mjs <receipt.json>`. Missing fields, invalid budgets, and incomplete retry records fail the check. This checks the receipt, not the runner's scheduler or the truth of supplied evidence. Verify the job record too.
-
-Track each runner job's ID and enqueue time. Owners and verifiers report `blocked: runner queue` with the job ID and elapsed wait once queue wait exceeds 10 minutes. The repository AGENTS.md can override this threshold with `pstack runner queue minutes: <positive number>`. The root's hourly audit checks queue length and its own jobs' wait times, and treats an overdue, unreported wait as drift.
+A failed start, unreachable thread, task failure, or invalid terminal status is a dropout; a running turn needs no terminal block. A valid `blocked` status waits for the root's answer. Cloud owners get no live credentials or customer data. The local root verifies and performs the exact-head merge and live steps under project AGENTS.md; native owners retain vanilla owner-merges.
 
 ## Completion and dropouts
 
