@@ -67,3 +67,5 @@ Files authored for this port (not derived from upstream):
 - `REVIEW.md` (the review panel's usage and waiver-scope mandate, #153; adapted from mastra-pilot's `REVIEW.md`, not from upstream)
 - `CHANGES.md`
 - `LICENSE-cursor-team-kit` (copied verbatim from upstream cursor-team-kit MIT)
+
+`scripts/cloud-owner-{bootstrap,preflight}.mjs` and their CLI fixtures are local Cloud-owner adaptations.

@@ -1,12 +1,12 @@
 #!/usr/bin/env node
 import { execFileSync } from "node:child_process";
-import { lstatSync, mkdirSync, readFileSync, readlinkSync, realpathSync, statSync, symlinkSync, unlinkSync } from "node:fs";
+import { lstatSync, mkdirSync, readFileSync, readlinkSync, readdirSync, realpathSync, statSync, symlinkSync, unlinkSync } from "node:fs";
 import { isAbsolute, join, relative, resolve, sep } from "node:path";
 
 try {
-  const [forkPath, projectPath, ...extra] = process.argv.slice(2);
-  if (!forkPath || !projectPath || extra.length) {
-    throw new Error("Usage: cloud-owner-preflight.mjs <fork-checkout> <project-checkout>");
+  const [forkPath, projectPath, mode, catalogPath, ...extra] = process.argv.slice(2);
+  if (!forkPath || !projectPath || extra.length || !([undefined, "--prepare", "--catalog"].includes(mode)) || (mode === "--catalog" ? !catalogPath : catalogPath)) {
+    throw new Error("Usage: cloud-owner-preflight.mjs <fork-checkout> <project-checkout> [--prepare | --catalog <executor-catalog.json>]");
   }
   const forkRoot = realpathSync(forkPath);
   const projectRoot = realpathSync(projectPath);
@@ -20,7 +20,7 @@ try {
   if (isAbsolute(installedRelative) || installedRelative === ".." || installedRelative.startsWith(`..${sep}`)) {
     throw new Error("Installed skills directory resolves outside the project checkout");
   }
-  for (const skill of new Set(required.map(path => path.split("/")[0]))) {
+  for (const skill of readdirSync(sourceSkills).filter(name => statSync(join(sourceSkills, name)).isDirectory())) {
     const source = join(sourceSkills, skill);
     const installed = join(installedSkills, skill);
     const resolvedSource = realpathSync(source);
@@ -64,14 +64,30 @@ try {
     throw new Error("Missing or empty project AGENTS.md");
   }
   availableFiles.push(relative(projectRoot, projectRules));
+  const expectedSkills = readdirSync(installedSkills).flatMap(directory => {
+    const file = join(installedSkills, directory, "SKILL.md");
+    const text = readFileSync(file, "utf8");
+    const name = /^name:\s*["']?([^"'\r\n]+?)["']?\s*$/m.exec(text)?.[1];
+    if (!name) throw new Error(`Missing skill name: .agents/skills/${directory}/SKILL.md`);
+    return [name];
+  });
+  if (mode !== "--prepare") {
+    if (!catalogPath) throw new Error("Executor skill catalog required; filesystem preparation alone is not a passing preflight");
+    const catalog = JSON.parse(readFileSync(catalogPath === "-" ? 0 : catalogPath, "utf8"));
+    if (catalog.authority !== "executor" || !Array.isArray(catalog.skills)) throw new Error("Expected an executor catalog with a skills array");
+    const names = catalog.skills.map(skill => typeof skill === "string" ? skill : skill.name);
+    const missing = expectedSkills.filter(name => !names.includes(name) && !names.includes(`pstack:${name}`));
+    if (missing.length) throw new Error(`Executor catalog missing skills: ${missing.join(", ")}`);
+  }
   process.stdout.write(`${JSON.stringify({
-    preflight: "ok",
+    preflight: mode === "--prepare" ? "pending-catalog" : "ok",
     forkCommit,
     skillPaths: { source: relative(forkRoot, sourceSkills), installed: relative(projectRoot, installedSkills) },
     availableFiles,
     linkedSkills,
+    expectedSkills,
   }, null, 2)}\n`);
 } catch (error) {
-  process.stderr.write(`${JSON.stringify({ preflight: "blocked", reason: error.code ? `Filesystem or Git check failed (${error.code})` : error.message })}\n`);
+  process.stderr.write(`${JSON.stringify({ preflight: "blocked", reason: error.code ? `Filesystem or Git check failed (${error.code}): ${error.path ?? error.message}` : error.message })}\n`);
   process.exitCode = 1;
 }

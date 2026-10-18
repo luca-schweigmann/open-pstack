@@ -3,6 +3,10 @@
 Mergify auto-queue is live: ready PRs to main require passing verify, Unfret and exact-head live-gate, and no unresolved review thread; workflow changes require operator queueing.
 This port applies the Cursor → Claude Code substitutions in skill bodies. Earlier drafts left them flagged; this revision resolves them. A later pass added a Codex build that shares the same skills; see [Codex port](#codex-port) below.
 
+## Unreleased
+
+Cloud owner preparation and runtime catalog validation are separate. Preparation links every pstack skill and reports pending-catalog; only an executor catalog containing pstack and all project skills can pass the preflight. Filesystem errors include the failed path. The Cloud bootstrap resolves the project in Node rather than interpolating a long shell program, and exposes project skills in the user discovery root for executors launched outside the repository. Tracked in #227.
+
 ## 1.15.0-luca.9 reports unavailable Cloud owner usage honestly
 
 Cloud owner starts retain an explicit repository, PR/slice and task-ID receipt. Passing it with `thread-tokens.py --cloud-owner` reports O as unknown (Cloud), preserves observed local O separately, and makes H/O advisory. Missing owners without a receipt still fail the ratio check. Verifier-count and unnamed-child checks remain enforced.
