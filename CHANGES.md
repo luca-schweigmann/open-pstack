@@ -3,6 +3,10 @@
 Mergify auto-queue is live: ready PRs to main require passing verify, Unfret and exact-head live-gate, and no unresolved review thread; workflow changes require operator queueing.
 This port applies the Cursor → Claude Code substitutions in skill bodies. Earlier drafts left them flagged; this revision resolves them. A later pass added a Codex build that shares the same skills; see [Codex port](#codex-port) below.
 
+## 1.15.0-luca.5 adds the Codex Cloud owner route
+
+The optional `pr owners` sheet line can route Autopilot-full owners through `codex-cloud-start`. The parent retains the Cloud thread and receipt, waits through the tool, verifies locally, and sends repairs back to the same owner. Cloud owners use the GitHub connector and receive no live credentials or customer data. For this route, the local root performs the verified expected-head merge and live steps under the repository release rule. Native owners remain the default until the cloud-lane mini run is green. The generated route catalog documents the route without adding a local runner adapter. A generic Cloud owner contract and a fail-closed preflight check the fork commit, installed project skills, and project AGENTS.md before building.
+
 ## 1.15.0-luca.4 keeps four local fork changes
 
 This fork tracks Open Pstack 1.15.0. It registers the `codex:gpt-6-astra` family, passes `--profile pstack-lane` to Codex lanes when that profile file exists, reopens the active playbook after a compaction through the SessionStart hook, and has autopilot-full arm its hourly audit loop before the first owner.

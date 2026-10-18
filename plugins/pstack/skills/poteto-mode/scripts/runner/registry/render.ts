@@ -119,8 +119,8 @@ export function renderCatalog(registry: Registry): GeneratedFile {
     "## Routes",
     "",
     ...table(
-      ["Provider", ...parents.map((parent) => `${PARENTS[parent].harness} parent`), "Access modes", "Prompt", "Model proof", "Child environment", "Host prerequisites"],
-      registry.adapters.map((adapter) => [
+      ["Provider / route", ...parents.map((parent) => `${PARENTS[parent].harness} parent`), "Access modes", "Prompt", "Model proof", "Child environment", "Host prerequisites"],
+      [...registry.adapters.map((adapter) => [
         adapter.id,
         ...parents.map((parent) => route(adapter, parent)),
         adapter.launch.supports.map(code).join(", "),
@@ -128,8 +128,18 @@ export function renderCatalog(registry: Registry): GeneratedFile {
         adapter.proof.report === "required" ? "provider report" : "pinned argv",
         environment(adapter, false),
         adapter.docs.hostPrerequisites.length === 0 ? "-" : adapter.docs.hostPrerequisites.join("; "),
-      ])
+      ]), [
+        "codex-cloud:<env>",
+        ...parents.map(() => "codex-cloud-start"),
+        "Cloud full access",
+        "file",
+        "launch readback; not runner proof",
+        "Cloud environment",
+        "published environment; local operator session",
+      ]]
     ),
+    "",
+    "The explicit `codex-cloud:<env>` owner route is not a runner provider. See [Codex Cloud owners](provider-dispatch.md#codex-cloud-owners) for its receipt and completion rules. It runs the Codex Sol model from the matrix inside Cloud.",
     "",
     "The runner refuses an access mode outside a provider's Access modes cell before launch. `isolated-write-full-access` is a writer capability, not a `--mode` value: the runner takes it as `--mode isolated-write --writer-sandbox full-access`, which a parent passes only when the model sheet opts in, as [`provider-dispatch.md`](provider-dispatch.md#codex-writer-sandbox) says.",
     "",

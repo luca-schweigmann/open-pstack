@@ -62,7 +62,7 @@ Rolling aliases:
 
 ## Routes
 
-| Provider | Claude Code parent | Codex parent | Access modes | Prompt | Model proof | Child environment | Host prerequisites |
+| Provider / route | Claude Code parent | Codex parent | Access modes | Prompt | Model proof | Child environment | Host prerequisites |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | claude | native `Agent` | external runner | `read-only`, `isolated-write` | stdin | provider report | read-only: inherited; isolated-write: inherited without `GIT_*` | - |
 | codex | external runner | native `spawn_agent` | `read-only`, `isolated-write`, `isolated-write-full-access` | stdin | pinned argv | inherited | - |
@@ -73,6 +73,9 @@ Rolling aliases:
 | amp | external runner | external runner | `read-only` | stdin | pinned argv | allowlist | - |
 | agy | external runner | external runner | `read-only` | stdin | pinned argv | allowlist | - |
 | cursor | external runner | external runner | `read-only` | stdin | pinned argv | allowlist | - |
+| codex-cloud:<env> | codex-cloud-start | codex-cloud-start | Cloud full access | file | launch readback; not runner proof | Cloud environment | published environment; local operator session |
+
+The explicit `codex-cloud:<env>` owner route is not a runner provider. See [Codex Cloud owners](provider-dispatch.md#codex-cloud-owners) for its receipt and completion rules. It runs the Codex Sol model from the matrix inside Cloud.
 
 The runner refuses an access mode outside a provider's Access modes cell before launch. `isolated-write-full-access` is a writer capability, not a `--mode` value: the runner takes it as `--mode isolated-write --writer-sandbox full-access`, which a parent passes only when the model sheet opts in, as [`provider-dispatch.md`](provider-dispatch.md#codex-writer-sandbox) says.
 
