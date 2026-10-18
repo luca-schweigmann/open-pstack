@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { execFileSync } from "node:child_process";
 import { readFileSync, realpathSync, statSync } from "node:fs";
-import { join } from "node:path";
+import { isAbsolute, join, relative, sep } from "node:path";
 
 try {
   const [forkPath, projectPath, ...extra] = process.argv.slice(2);
@@ -23,29 +23,32 @@ try {
     "unslop/SKILL.md",
   ];
   const readFiles = [];
-  for (const relative of required) {
-    const installed = join(installedSkills, relative);
-    const source = join(sourceSkills, relative);
-    if (realpathSync(installed) !== realpathSync(source)) {
-      throw new Error(`Installed skill does not resolve to the fork checkout: ${relative}`);
+  for (const skill of required) {
+    const installed = join(installedSkills, skill);
+    const source = join(sourceSkills, skill);
+    const resolvedSource = realpathSync(source);
+    const resolvedInstalled = realpathSync(installed);
+    const forkRelative = relative(forkRoot, resolvedSource);
+    if (isAbsolute(forkRelative) || forkRelative === ".." || forkRelative.startsWith(`..${sep}`) || resolvedInstalled !== resolvedSource) {
+      throw new Error(`Installed skill does not resolve to the fork checkout: ${skill}`);
     }
     if (!statSync(installed).isFile() || !readFileSync(installed, "utf8").trim()) {
-      throw new Error(`Missing or empty skill: ${relative}`);
+      throw new Error(`Missing or empty skill: ${skill}`);
     }
-    readFiles.push(installed);
+    readFiles.push(relative(projectRoot, installed));
   }
   const projectRules = join(projectRoot, "AGENTS.md");
   if (!statSync(projectRules).isFile() || !readFileSync(projectRules, "utf8").trim()) {
     throw new Error("Missing or empty project AGENTS.md");
   }
-  readFiles.push(projectRules);
+  readFiles.push(relative(projectRoot, projectRules));
   process.stdout.write(`${JSON.stringify({
     preflight: "ok",
     forkCommit,
-    skillPaths: { source: sourceSkills, installed: installedSkills },
+    skillPaths: { source: relative(forkRoot, sourceSkills), installed: relative(projectRoot, installedSkills) },
     readFiles,
   }, null, 2)}\n`);
 } catch (error) {
-  process.stderr.write(`${JSON.stringify({ preflight: "blocked", reason: error.message })}\n`);
+  process.stderr.write(`${JSON.stringify({ preflight: "blocked", reason: error.code ? `Filesystem or Git check failed (${error.code})` : error.message })}\n`);
   process.exitCode = 1;
 }
