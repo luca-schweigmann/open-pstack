@@ -1,12 +1,16 @@
 # Cloud owner contract
 
-The local build root runs Autopilot-full and owns verdicts, local verification, merge, and live steps. One Cloud owner builds each assigned slice and keeps its branch and PR through repairs. The root runs the configured Luna verify swarm locally on the reported head. Findings return to the same owner and PR. The route's queue and receipt rules live in [provider-dispatch](provider-dispatch.md#codex-cloud-owners).
+Create the local build root through session_bridge `codex_create_visible_session`, keep it visible and pinned, and do not use `codex_create_thread`. The local build root runs Autopilot-full and owns verdicts, local verification, merge, and live steps. One Cloud owner builds each assigned slice and keeps its branch and PR through repairs. The root runs the configured Luna verify swarm locally on the reported head. Findings return to the same owner and PR. The route's queue and receipt rules live in [provider-dispatch](provider-dispatch.md#codex-cloud-owners).
 
 ## Start with the installed skills
 
 Before building, run the fork's `scripts/cloud-owner-preflight.mjs` with the fork checkout and project checkout supplied in the brief. Paste its evidence block into the task. If it fails, report `blocked` and stop without building. A successful block proves file availability and records the fork commit; it does not prove the model has read the instructions.
 
 Then read the installed poteto-mode SKILL.md, the owner duties in [Autopilot-full](../playbooks/autopilot-full.md), this contract, and the project's AGENTS.md. Apply poteto-mode, its relevant principles, deslop, no-comments, and technical-writing. Keep the decisions trail and push each completed unit worth preserving. Project-specific gates, commands, release permissions, and data rules come from the project's AGENTS.md, not this contract. Do not bypass a gate or substitute a weaker model.
+
+## Ground every Cloud subagent in the project checkout
+
+For every subagent a Cloud owner starts through `collaboration.spawn_agent`, put the absolute project-checkout path in the brief. Require the subagent to begin with `cd <absolute-project-checkout>` and then run `git rev-parse --show-toplevel`. If `cd` or the Git command fails, or the reported top-level path is not the assigned checkout, the subagent must stop before any further work and report the failure to its owner. Do not rely on an inherited working directory: Cloud subagents have been observed starting in `/workspace` outside the repository, where Git exits 128.
 
 ## Build and report
 
