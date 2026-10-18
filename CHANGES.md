@@ -3,6 +3,10 @@
 Mergify auto-queue is live: ready PRs to main require passing verify, Unfret and exact-head live-gate, and no unresolved review thread; workflow changes require operator queueing.
 This port applies the Cursor → Claude Code substitutions in skill bodies. Earlier drafts left them flagged; this revision resolves them. A later pass added a Codex build that shares the same skills; see [Codex port](#codex-port) below.
 
+## 1.15.0-luca.13 caps root read output
+
+Local adaptation: on pickup the root never re-reads a loaded skill or playbook, reads other playbooks by section, caps read output at 2000 tokens except log tails, and hands bundled large reads to a Luna explorer. Observed: a Hub build chat took 715 KB from 135 exec calls with raised output limits.
+
 ## 1.15.0-luca.12 keeps Cloud tasks off the operator and root context lean
 
 Local adaptation: Cloud owners and verifiers never use a question or ask-user tool; a blocked task reports the exact question to the root. On pickup the root reads the handoff note instead of the old thread, and reads large files, logs and threads only as targeted excerpts of about 4k characters or through a Luna summary. Observed: a Cloud owner's question reached the operator; new build chats grew from 55k to about 290k context in 32 minutes.
