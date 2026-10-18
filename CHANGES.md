@@ -3,6 +3,10 @@
 Mergify auto-queue is live: ready PRs to main require passing verify, Unfret and exact-head live-gate, and no unresolved review thread; workflow changes require operator queueing.
 This port applies the Cursor → Claude Code substitutions in skill bodies. Earlier drafts left them flagged; this revision resolves them. A later pass added a Codex build that shares the same skills; see [Codex port](#codex-port) below.
 
+## 1.15.0-luca.12 keeps Cloud tasks off the operator and root context lean
+
+Local adaptation: Cloud owners and verifiers never use a question or ask-user tool; a blocked task reports the exact question to the root. On pickup the root reads the handoff note instead of the old thread, and reads large files, logs and threads only as targeted excerpts of about 4k characters or through a Luna summary. Observed: a Cloud owner's question reached the operator; new build chats grew from 55k to about 290k context in 32 minutes.
+
 ## 1.15.0-luca.11 reuses audited gate receipts
 
 Local adaptation: the verifier card reuses a passing receipt at the candidate SHA after auditing its run evidence and coverage, never reruns it for independence or because another gate is open, and runs live only what receipts do not cover. Root-reserved gates without evidence stay open and block a merge-ready verdict. A failed run is never repeated unchanged: its cause is named from the log first, environment failures are reported as blocked, and owners rerun once after a repair aimed at that cause. The autopilot-full brief lists every required gate with its receipt or marks it open or root-reserved. Observed in Hub, Brain and Ben verifier runs.
