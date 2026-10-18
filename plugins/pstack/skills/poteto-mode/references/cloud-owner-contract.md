@@ -8,7 +8,7 @@ Build, open the PR early through the GitHub connector, and keep repairs there. F
 
 Run gates once per relevant head. Post one PR JSON receipt: `{"headSha":"<SHA>","gates":[{"command":"<command>","exitCode":0,"duration":5,"logTail":"passed","logUrl":"<durable CI/runner log URL when available>"}]}`. Duration is seconds. Validate: `node <fork-checkout>/scripts/check-gate-receipt.mjs <receipt.json> <verified-sha>`.
 
-Verifiers audit coverage, SHA and gate fields; repeat only missing, stale or contradicted gates, plus a live run and diff audit. Red stays red until repaired.
+Verifiers audit coverage, SHA and gate fields; they repeat only missing, stale or contradicted gates and run live only what receipts do not cover. Red stays red until repaired. Never repeat a failed gate unchanged. Name the cause from its log first; an environment failure your slice cannot fix is a blocker to report. Otherwise rerun once after a repair aimed at that cause. If the same failure recurs, stop and report; a different, newly diagnosed failure gets its own repair.
 
 ## Wait and report
 

@@ -3,6 +3,10 @@
 Mergify auto-queue is live: ready PRs to main require passing verify, Unfret and exact-head live-gate, and no unresolved review thread; workflow changes require operator queueing.
 This port applies the Cursor → Claude Code substitutions in skill bodies. Earlier drafts left them flagged; this revision resolves them. A later pass added a Codex build that shares the same skills; see [Codex port](#codex-port) below.
 
+## 1.15.0-luca.11 reuses audited gate receipts
+
+Local adaptation: the verifier card reuses a passing receipt at the candidate SHA after auditing its run evidence and coverage, never reruns it for independence or because another gate is open, and runs live only what receipts do not cover. Root-reserved gates without evidence stay open and block a merge-ready verdict. A failed run is never repeated unchanged: its cause is named from the log first, environment failures are reported as blocked, and owners rerun once after a repair aimed at that cause. The autopilot-full brief lists every required gate with its receipt or marks it open or root-reserved. Observed in Hub, Brain and Ben verifier runs.
+
 ## 1.15.0-luca.10 drops reflexive test-first guidance
 
 Local adaptation (#228): bug-fix step 5 and the sequencing principle use repro/baseline-then-fix proof without a required failing-test commit; a regression test only where no E2E would catch a recurrence. Refactoring step 1 uses the flow's existing deterministic E2E and adds the smallest behavior pin only for risky, uncovered moves. The type-checked build remains a build step. Session-start no longer suggests direct TDD entry. Other test guidance is unchanged.
