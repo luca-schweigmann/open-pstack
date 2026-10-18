@@ -3,6 +3,10 @@
 Mergify auto-queue is live: ready PRs to main require passing verify, Unfret and exact-head live-gate, and no unresolved review thread; workflow changes require operator queueing.
 This port applies the Cursor → Claude Code substitutions in skill bodies. Earlier drafts left them flagged; this revision resolves them. A later pass added a Codex build that shares the same skills; see [Codex port](#codex-port) below.
 
+## 1.15.0-luca.6 waits for owner and verifier results
+
+Autopilot-full passes one blocking-wait policy to owners and verifiers for long commands, station jobs, CI, and subagents. This is a fork-owned addition.
+
 ## Shared remote test runner gate budgets
 
 Autopilot-full now requires Cloud-first gates, evidence-based runner timeouts, diagnosis and reduced input before retries, queue blocking reports, and hourly queue audits. `scripts/check-gate-receipt.mjs` validates structured gate receipts, including runner timeout budgets, Cloud exclusion reasons, and retry records. Its CLI flow runs through accepted and rejected example receipts in `tests/gate-receipt.test.mjs`. These are fork-owned additions. Runner-side scheduling enforcement is separate.
