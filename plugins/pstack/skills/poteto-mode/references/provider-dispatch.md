@@ -109,6 +109,39 @@ The parent maintains a run-owned receipt with `threadId`, `env`, `branch`, `prUr
 
 A failed start, unreachable thread, explicit task failure, or missing or invalid status block at the end of an owner turn is a dropout. A running turn needs no terminal status block. A valid `blocked` report is waiting for the root or operator, not a dropout; answer it through the retained handle. Long-running work is never a dropout. Record the reason and apply the calling playbook's dropout policy without silently replacing the Cloud route with a native lane or another model. External runner exit-code and model-proof rules below apply only to that runner.
 
+### Gate receipts
+
+Post a structured JSON gate receipt on the PR for each reported head. Set `headSha` to the full commit SHA. Each entry in `gates` carries `command`, integer `exitCode`, `duration` in seconds, `logTail`, and `route`. Use `cloud`, `shared-remote-test-runner`, or `local` as the route. The shared remote test runner is shared by projects. Run every gate Cloud supports in Cloud. Reserve `local` for work that requires the local platform.
+
+Before submitting a shared remote test runner job, set and record `timeout` in seconds and `route-reason`, explaining what Cloud cannot run. Select its `budget` in this order:
+
+1. With a last evidenced duration, use `kind: "measured"`, its `seconds`, and an `evidence` reference to that receipt. Set `timeout` to `max(60, ceil(seconds * 2))`.
+2. Without a measurement, use the explicit gate budget in the repository AGENTS.md. Record `kind: "repo"`, its `seconds`, and the AGENTS.md budget reference as `evidence`. Set `timeout` to that budget.
+3. Without either, use `kind: "first-run"` and a timeout of at most 900 seconds. Record the measured duration for subsequent jobs.
+
+Never use a two-hour default. These explicit gate-job timeouts do not impose a runtime deadline on an owner or model lane.
+
+After a red or timed-out job, diagnose it and reduce its scope or resource demand before resubmitting changed input. Add `retry` with `diagnosis` and `change` to its receipt. Never resubmit identical input. The root and verifiers check these claims against the job record.
+
+For example, a runner gate entry with a previous five-second measurement includes:
+
+```json
+{
+  "command": "run-e2e --flow smoke",
+  "exitCode": 0,
+  "duration": 5,
+  "logTail": "passed",
+  "route": "shared-remote-test-runner",
+  "timeout": 60,
+  "route-reason": "Cloud lacks the required device",
+  "budget": {"kind": "measured", "seconds": 5, "evidence": "previous gate receipt"}
+}
+```
+
+Before accepting a receipt, run `node <fork-checkout>/scripts/check-gate-receipt.mjs <receipt.json>`. Missing fields, invalid budgets, and incomplete retry records fail the check. This checks the receipt, not the runner's scheduler or the truth of supplied evidence. Verify the job record too.
+
+Track each runner job's ID and enqueue time. Owners and verifiers report `blocked: runner queue` with the job ID and elapsed wait once queue wait exceeds 10 minutes. The repository AGENTS.md can override this threshold with `pstack runner queue minutes: <positive number>`. The root's hourly audit checks queue length and its own jobs' wait times, and treats an overdue, unreported wait as drift.
+
 ## Completion and dropouts
 
 Success requires all of these:
