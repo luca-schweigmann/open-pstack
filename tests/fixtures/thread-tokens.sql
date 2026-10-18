@@ -6,7 +6,7 @@ INSERT INTO threads VALUES
 ('PR #12 verifier diff', 10, 1300, NULL, 'repo-a', '/sample/a'),
 ('PR #12 verifier extra', 10, 1400, NULL, 'repo-a', '/sample/a'),
 ('PR #12 owner build', 1000, 1000, NULL, 'repo-b', '/sample/b'),
-('PR #13 verifier flow', 40, 1400, NULL, 'repo-a', '/sample/a'),
+('PR #13 verifier flow', 40, 1450, NULL, 'repo-a', '/sample/a'),
 ('slice:sample owner build', 0, 1500, NULL, NULL, '/sample/a'),
 ('unassigned', 70, 1600, NULL, 'repo-a', '/sample/a'),
 ('PR #12 merge helper', 20, 1700, NULL, 'repo-a', '/sample/a'),

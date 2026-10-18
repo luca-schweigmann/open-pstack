@@ -83,7 +83,16 @@ def main():
     parser.add_argument("--repo", help="Exact git_origin_url or cwd")
     parser.add_argument("--root-thread", action="append", default=[], help="Build-chat ID; repeat for independent spawn trees (also inferred from named roles)")
     parser.add_argument("--check", action="store_true")
+    parser.add_argument("--cloud-owner", action="append", default=[], type=json.loads,
+                        help='Cloud start receipt as JSON [repository, "PR #N" or "slice:id", task ID]; repeat per owner')
     args = parser.parse_args()
+    cloud_owners = {}
+    for receipt in args.cloud_owner:
+        if (not isinstance(receipt, list) or len(receipt) != 3
+                or not all(isinstance(value, str) and value.strip() for value in receipt)
+                or not re.fullmatch(r"(?:PR #[1-9][0-9]*|slice:[^\s]+)", receipt[1])):
+            parser.error("--cloud-owner requires [repository, PR #N or slice:id, task ID]")
+        cloud_owners.setdefault(json.dumps(receipt[:2], separators=(",", ":")), []).append(receipt[2])
     if args.since >= args.until:
         parser.error("--since must precede --until")
     groups = {}
@@ -91,6 +100,7 @@ def main():
     fallback_threads = 0
     excluded_foreign_threads = 0
     violations = []
+    hints = []
     try:
         with sqlite3.connect(args.database.resolve().as_uri() + "?mode=ro", uri=True) as database:
             database.row_factory = sqlite3.Row
@@ -157,17 +167,24 @@ def main():
         for key, group in sorted(groups.items()):
             owner, overhead = total(group["O"]), total(group["H"])
             group["overhead_to_owner"] = overhead / owner if owner else None
+            if key in cloud_owners:
+                group["cloud_owner_tasks"] = cloud_owners[key]
+                group["owner_status"] = "unbekannt (Cloud)"
+                group["O_local"] = group["O"]
+                group["O"] = None
+                group["overhead_to_owner"] = None
+                hints.append(f"{key}: H/O unknown (Cloud); H={overhead}, O=unbekannt (Cloud)")
             if group["item"].startswith("PR #"):
                 if group["verifier_threads"] > 2:
                     violations.append(f"{key}: {group['verifier_threads']} verifier threads > 2")
-                if overhead * 3 > owner:
+                if key not in cloud_owners and overhead * 3 > owner:
                     violations.append(f"{key}: H/O > 1/3 (H={overhead}, O={owner})")
         print(json.dumps({"window": {"since": args.since, "until": args.until},
                           "overhead": "H = owner after first code-ready + verifier + fix; unassigned = run-level overhead",
                           "fallback": "Missing rollouts: lifetime tokens_used as unknown_tokens at thread creation; phase and turn count unavailable",
                           "fallback_threads": fallback_threads, "excluded_foreign_threads": excluded_foreign_threads,
                           "root_threads": sorted(roots), "groups": dict(sorted(groups.items())),
-                          "unassigned": unassigned, "violations": violations}, indent=2))
+                          "unassigned": unassigned, "hints": hints, "violations": violations}, indent=2))
         return int(args.check and bool(violations))
     except (sqlite3.Error, OSError, ValueError, KeyError, TypeError) as error:
         parser.exit(1, f"Cannot read thread usage: {error}\n")

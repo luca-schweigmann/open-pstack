@@ -3,6 +3,10 @@
 Mergify auto-queue is live: ready PRs to main require passing verify, Unfret and exact-head live-gate, and no unresolved review thread; workflow changes require operator queueing.
 This port applies the Cursor → Claude Code substitutions in skill bodies. Earlier drafts left them flagged; this revision resolves them. A later pass added a Codex build that shares the same skills; see [Codex port](#codex-port) below.
 
+## 1.15.0-luca.9 reports unavailable Cloud owner usage honestly
+
+Cloud owner starts retain an explicit repository, PR/slice and task-ID receipt. Passing it with `thread-tokens.py --cloud-owner` reports O as unknown (Cloud), preserves observed local O separately, and makes H/O advisory. Missing owners without a receipt still fail the ratio check. Verifier-count and unnamed-child checks remain enforced.
+
 ## 1.15.0-luca.8 bounds Autopilot verification overhead
 
 Autopilot-full uses one verifier per head, a second for a named coverage gap, and more only with the operator's explicit go. A short verifier card replaces startup manuals; fix rounds use fresh agents for the same owner role with merged scope and one branch writer. Helpers use blocking waits. The owner card records helper handles, rewrite safeguards and linked gate receipts. Preflight checks required quality skills without loading them. Capacity rejections wait rather than drop out.
