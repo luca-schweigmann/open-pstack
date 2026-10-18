@@ -7,7 +7,7 @@ import { fileURLToPath } from "node:url";
 const RULE =
   "Tests alone are not sufficient verification. A PR is verified only when its unit, live, and perf boxes are all checked.";
 const LANE_SENTENCE =
-  "Ten lanes on the configured `swarm workers` role at the PR head";
+  "Two lanes on the configured `swarm workers` role at the PR head";
 const BOX = /^\s*- \[[ xX]\] (.*)$/;
 const TOP_BOX = /^- \[[ xX]\] (.*)$/;
 
@@ -110,7 +110,7 @@ const PR_BLOCKS = Object.freeze([
 export const CONTRACT = Object.freeze({
   rule: RULE,
   laneSentence: LANE_SENTENCE,
-  laneCount: 10,
+  laneCount: 2,
   introMaxNonBlank: 9,
   howToRead: "How to read this",
   program: "Program checklist",

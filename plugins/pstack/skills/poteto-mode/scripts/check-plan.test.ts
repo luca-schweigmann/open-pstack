@@ -124,7 +124,7 @@ describe("check-plan", () => {
     expect(result.problems).toEqual([]);
     expect(result.ok).toBe(true);
     expect(result.prCount).toBe(1);
-    expect(result.report[0]).toContain("verify-live=10");
+    expect(result.report[0]).toContain("verify-live=2");
     expect(result.report[0]).toContain("verify-perf=4");
   });
 
@@ -172,8 +172,8 @@ describe("check-plan", () => {
   it("accepts nested sub-boxes under live and perf", () => {
     const withLaneNest = replaceOnce(
       skeleton,
-      "- [ ] Lane 3. <Scenario.> Save `<slug>.png`. Pass when <predicate>.\n",
-      "- [ ] Lane 3. <Scenario.> Save `<slug>.png`. Pass when <predicate>.\n  - [ ] Reset cookies first.\n",
+      "- [ ] Lane 2. <Changed flow, run through the feature file `<verify skill>/features/<area>.md`.> Save `<slug>.png`. Pass when <predicate>.\n",
+      "- [ ] Lane 2. <Changed flow, run through the feature file `<verify skill>/features/<area>.md`.> Save `<slug>.png`. Pass when <predicate>.\n  - [ ] Reset cookies first.\n",
     );
     const mutated = replaceOnce(
       withLaneNest,
@@ -195,12 +195,12 @@ describe("check-plan", () => {
   it("reports a missing screenshot and an empty pass predicate independently", () => {
     const mutated = replaceOnce(
       skeleton,
-      "Lane 5. <Scenario.> Save `<slug>.png`. Pass when <predicate>.",
-      "Lane 5. <Scenario.>",
+      "Lane 2. <Changed flow, run through the feature file `<verify skill>/features/<area>.md`.> Save `<slug>.png`. Pass when <predicate>.",
+      "Lane 2. <Changed flow, run through the feature file `<verify skill>/features/<area>.md`.>",
     );
     const problems = problemsOf(mutated).join("\n");
-    expect(problems).toContain("lane 5 names no screenshot");
-    expect(problems).toContain("lane 5 has no pass predicate");
+    expect(problems).toContain("lane 2 names no screenshot");
+    expect(problems).toContain("lane 2 has no pass predicate");
   });
 
   const rejections: ReadonlyArray<readonly [string, string, string]> = [
@@ -276,65 +276,65 @@ describe("check-plan", () => {
       "a dropped live lane",
       replaceOnce(
         skeleton,
-        "- [ ] Lane 10. <Scenario.> Save `<slug>.png`. Pass when <predicate>.\n",
+        "- [ ] Lane 2. <Changed flow, run through the feature file `<verify skill>/features/<area>.md`.> Save `<slug>.png`. Pass when <predicate>.\n",
         "",
       ),
-      "expected 1 to 10",
+      "expected 1 to 2",
     ],
     [
       "reordered live lanes",
       replaceOnce(
         replaceOnce(
-          replaceOnce(skeleton, "Lane 9.", "Lane TMP."),
-          "Lane 10.",
-          "Lane 9.",
+          replaceOnce(skeleton, "Lane 1.", "Lane TMP."),
+          "Lane 2.",
+          "Lane 1.",
         ),
         "Lane TMP.",
-        "Lane 10.",
+        "Lane 2.",
       ),
-      "lanes are [1,2,3,4,5,6,7,8,10,9]",
+      "lanes are [2,1]",
     ],
     [
       "a lane with no screenshot",
       replaceOnce(
         skeleton,
-        "Lane 4. <Scenario.> Save `<slug>.png`. Pass when <predicate>.",
-        "Lane 4. <Scenario.> Pass when <predicate>.",
+        "Lane 2. <Changed flow, run through the feature file `<verify skill>/features/<area>.md`.> Save `<slug>.png`. Pass when <predicate>.",
+        "Lane 2. <Changed flow, run through the feature file `<verify skill>/features/<area>.md`.> Pass when <predicate>.",
       ),
-      "lane 4 names no screenshot",
+      "lane 2 names no screenshot",
     ],
     [
       "a fake screenshot path",
       replaceOnce(
         skeleton,
-        "Lane 4. <Scenario.> Save `<slug>.png`. Pass when <predicate>.",
-        "Lane 4. <Scenario.> Save `notes.txt`. Pass when <predicate>.",
+        "Lane 2. <Changed flow, run through the feature file `<verify skill>/features/<area>.md`.> Save `<slug>.png`. Pass when <predicate>.",
+        "Lane 2. <Changed flow, run through the feature file `<verify skill>/features/<area>.md`.> Save `notes.txt`. Pass when <predicate>.",
       ),
-      "lane 4 names no screenshot",
+      "lane 2 names no screenshot",
     ],
     [
       "a lane with no pass predicate",
       replaceOnce(
         skeleton,
-        "Lane 7. <Scenario.> Save `<slug>.png`. Pass when <predicate>.",
-        "Lane 7. <Scenario.> Save `<slug>.png`.",
+        "Lane 2. <Changed flow, run through the feature file `<verify skill>/features/<area>.md`.> Save `<slug>.png`. Pass when <predicate>.",
+        "Lane 2. <Changed flow, run through the feature file `<verify skill>/features/<area>.md`.> Save `<slug>.png`.",
       ),
-      "lane 7 has no pass predicate",
+      "lane 2 has no pass predicate",
     ],
     [
       "an empty pass predicate",
       replaceOnce(
         skeleton,
-        "Lane 7. <Scenario.> Save `<slug>.png`. Pass when <predicate>.",
-        "Lane 7. <Scenario.> Save `<slug>.png`. Pass when.",
+        "Lane 2. <Changed flow, run through the feature file `<verify skill>/features/<area>.md`.> Save `<slug>.png`. Pass when <predicate>.",
+        "Lane 2. <Changed flow, run through the feature file `<verify skill>/features/<area>.md`.> Save `<slug>.png`. Pass when.",
       ),
-      "lane 7 has no pass predicate",
+      "lane 2 has no pass predicate",
     ],
     [
       "a live box that is not a lane",
       replaceOnce(
         skeleton,
-        "Lane 2. <Scenario.> Save `<slug>.png`. Pass when <predicate>.",
+        "Lane 2. <Changed flow, run through the feature file `<verify skill>/features/<area>.md`.> Save `<slug>.png`. Pass when <predicate>.",
         "Extra. Save `<slug>.png`. Pass when <predicate>.",
       ),
       "live box is not a lane",
@@ -344,7 +344,7 @@ describe("check-plan", () => {
       replaceOnce(
         skeleton,
         CONTRACT.laneSentence,
-        "Ten lanes on `grok-4.6-fast-xhigh` at the PR head",
+        "Two lanes on `grok-4.6-fast-xhigh` at the PR head",
       ),
       `Verify, live lacks "${CONTRACT.laneSentence}"`,
     ],
