@@ -14,7 +14,7 @@ For every subagent a Cloud owner starts through `collaboration.spawn_agent`, put
 
 ## Build and report
 
-Build and test the assigned slice. Run every gate that the project's AGENTS.md requires on the committed head before reporting code-ready. Use one E2E test per user flow and no new unit tests. When a test is red, rerun only that red test after the repair; do not rerun green tests without a relevant change. Report the actual gate commands and exit codes.
+Build and test the assigned slice. Run every gate that the project's AGENTS.md requires on the committed head before reporting code-ready. Use one E2E test per user flow and no new unit tests. When a test is red, rerun only that red test after the repair; do not rerun green tests without a relevant change. Report the actual gate commands and exit codes. Post one PR comment per head with each gate's command, exit code, duration, and log tail, tagged with the full head SHA. The root's verifiers check these receipts and do not re-run green gates, so a missing or vague receipt costs a rerun.
 
 Use the GitHub connector for PR creation, updates, and check inspection. Do not use `gh` or Origin in Cloud. Push only the assigned branch and keep all repairs on the same PR. Finish deslop and no-comments before handing the head to the root. Keep the trail available through a durable link.
 
