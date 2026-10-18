@@ -1,6 +1,6 @@
 # Cloud owner contract
 
-Create the local build root through session_bridge `codex_create_visible_session`, keep it visible and pinned, and do not use `codex_create_thread`. The local build root runs Autopilot-full and owns verdicts, local verification, merge, and live steps. One Cloud owner builds each assigned slice and keeps its branch and PR through repairs. The root runs the configured Luna verify swarm locally on the reported head. Findings return to the same owner and PR. The route's queue and receipt rules live in [provider-dispatch](provider-dispatch.md#codex-cloud-owners).
+Create the local build root through session_bridge `codex_create_visible_session`, keep it visible, pin it through `codex_move_thread_to_sidebar_section` with `sectionId: "pinned"`, and read back both states before handing it the queue. Do not use `codex_create_thread`. The local build root runs Autopilot-full and owns verdicts, local verification, merge, and live steps. One Cloud owner builds each assigned slice and keeps its branch and PR through repairs. The root runs the configured Luna verify swarm locally on the reported head. Findings return to the same owner and PR. The route's queue and receipt rules live in [provider-dispatch](provider-dispatch.md#codex-cloud-owners).
 
 ## Start with the installed skills
 
@@ -10,7 +10,7 @@ Then read the installed poteto-mode SKILL.md, the owner duties in [Autopilot-ful
 
 ## Ground every Cloud subagent in the project checkout
 
-For every subagent a Cloud owner starts through `collaboration.spawn_agent`, put the absolute project-checkout path in the brief. Require the subagent to begin with `cd <absolute-project-checkout>` and then run `git rev-parse --show-toplevel`. If `cd` or the Git command fails, or the reported top-level path is not the assigned checkout, the subagent must stop before any further work and report the failure to its owner. Do not rely on an inherited working directory: Cloud subagents have been observed starting in `/workspace` outside the repository, where Git exits 128.
+For every subagent a Cloud owner starts through `collaboration.spawn_agent`, put the absolute project-checkout path in the brief and use it as the working directory for every command, including commands run by read-only helpers. Require the subagent to begin with `cd <absolute-project-checkout>` and then run `git rev-parse --show-toplevel`. If `cd` or the Git command fails, or the reported top-level path is not the assigned checkout, the subagent must stop before any further work and report the failure to its owner. Do not rely on an inherited working directory: Cloud subagents have been observed starting in `/workspace` outside the repository, where Git exits 128.
 
 ## Build and report
 
