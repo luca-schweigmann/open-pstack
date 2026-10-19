@@ -5,6 +5,8 @@ This port applies the Cursor → Claude Code substitutions in skill bodies. Earl
 
 ## 1.15.0-luca.16 plans verification through the repo's verify skill
 
+Cloud owners use the owner card as their pstack manual and read only slice-selected skills. Preflight accepts `--only a,b,c`, keeps poteto-mode for the card, and removes unselected fork skill links while preserving repository skills. The root selects skills via codex-cloud-start `--skills`; owner tool output stays bounded.
+
 Local adaptation: plans, owner and verifier cards drive live proof through the repo's `verify-<project>` skill and name the feature file per lane. A repo without one gets it built first with create-verification-skill as a queue item every other item waits on; a slice that changes a covered flow updates it with maintain-verification-skill. The live block has two lanes (regression against trunk, changed flow) to fit autopilot-full's per-head verifier limit. Observed: no playbook or card named the repo verify skill; point-brain main and findmymonster have none.
 
 ## 1.15.0-luca.15 keeps every free queue item owned

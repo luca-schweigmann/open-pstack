@@ -25,7 +25,7 @@ test("Cloud owner preflight checks the installed checkout through its CLI", () =
     writeFileSync(join(project, "AGENTS.md"), "project rules\n");
     execFileSync("git", ["init", "-q", fork]);
     execFileSync("git", ["-C", fork, "-c", "user.name=Preflight", "-c", "user.email=preflight@example.invalid", "commit", "--allow-empty", "-qm", "fixture"]);
-    const run = (...args) => spawnSync(process.execPath, [script, ...args, ...(args.length === 2 ? ["--prepare"] : [])], { encoding: "utf8" });
+    const run = (...args) => spawnSync(process.execPath, [script, ...args, ...(args.length === 2 ? ["--prepare", "--only", "deslop,no-comments,principle-prove-it-works"] : [])], { encoding: "utf8" });
     const blocked = (result) => {
       assert.notEqual(result.status, 0);
       assert.equal(JSON.parse(result.stderr).preflight, "blocked");
@@ -37,11 +37,11 @@ test("Cloud owner preflight checks the installed checkout through its CLI", () =
     assert.equal(evidence.forkCommit, execFileSync("git", ["-C", fork, "rev-parse", "HEAD"], { encoding: "utf8" }).trim());
     assert.deepEqual(evidence.skillPaths, { source: "plugins/pstack/skills", installed: ".agents/skills" });
     assert.deepEqual(evidence.availableFiles, [...required.map(path => `.agents/skills/${path}`), "AGENTS.md"]);
-    assert.ok(evidence.bootstrapInstructions.includes(join(skills, "poteto-mode/SKILL.md")));
+    assert.ok(evidence.bootstrapInstructions.includes(join(skills, "poteto-mode/references/cloud-owner-contract.md")));
     assert.equal(evidence.preflight, "ok");
-    assert.match(evidence.bootstrapInstructions, /poteto-mode\/SKILL.md.*completely/);
+    assert.match(evidence.bootstrapInstructions, /only these skills/);
     const catalog = join(root, "catalog.json");
-    const gate = (...args) => spawnSync(process.execPath, [script, fork, project, ...args], { encoding: "utf8" });
+    const gate = (...args) => spawnSync(process.execPath, [script, fork, project, "--only", "deslop,no-comments,principle-prove-it-works", ...args], { encoding: "utf8" });
     assert.equal(gate().status, 0);
     writeFileSync(catalog, JSON.stringify({ authority: "executor", skills: [] }));
     assert.equal(gate("--catalog", catalog).status, 0);
@@ -60,7 +60,7 @@ test("Cloud owner preflight checks the installed checkout through its CLI", () =
     assert.deepEqual(JSON.parse(run(fork, project).stdout).linkedSkills, []);
     const slot = join(project, installed[0]);
     rmSync(slot);
-    symlinkSync(join(root, "missing"), slot);
+    symlinkSync(join(skills, "missing"), slot);
     assert.deepEqual(JSON.parse(run(fork, project).stdout).linkedSkills, [installed[0]]);
     rmSync(slot);
     symlinkSync(join(skills, "deslop"), slot);
