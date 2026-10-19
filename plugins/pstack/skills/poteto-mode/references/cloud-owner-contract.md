@@ -8,6 +8,8 @@ Build, open the PR early through the GitHub connector, and keep repairs there. F
 
 Keep tool output small: pipe long commands through `tail -n 80` or `head -c 4000`, grep logs instead of printing them whole, and read files in ranges. Never cat whole large files or print full test logs.
 
+Images: never load screenshots in batches. Look at one image only when it decides a step, shrunk first (`sips -Z 1000`) or cropped to the region. Otherwise keep screenshots as files and cite paths. When a visual check needs several images, hand the paths to a fresh Luna subagent that views them and returns only its verdict and findings. DOM reads target the region (`getByRole(...).innerText()`), never a full-page snapshot.
+
 ## Gate evidence
 
 Run gates once per relevant head. Post one PR JSON receipt: `{"headSha":"<SHA>","gates":[{"command":"<command>","exitCode":0,"duration":5,"logTail":"passed","logUrl":"<durable CI/runner log URL when available>"}]}`. Duration is seconds. Validate: `node <fork-checkout>/scripts/check-gate-receipt.mjs <receipt.json> <verified-sha>`.
