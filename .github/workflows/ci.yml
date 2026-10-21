@@ -1,9 +1,8 @@
 name: CI
 
+# Hosted CI only by hand (Luca 21.10.: GitHub-Minutenkontingent).
 on:
-  pull_request:
-  push:
-    branches: [main]
+  workflow_dispatch:
 
 permissions:
   contents: read
