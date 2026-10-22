@@ -17,7 +17,7 @@ Claude Code writes `<config-home>/pstack-models.md` and loads it from `<config-h
 
 Only when `CLAUDE_CONFIG_DIR` redirects the home, render exactly `@./pstack-models.md`, relative to the importing file's directory.
 
-Codex writes `<config-home>/pstack-models.md`. Codex has no `@` include, so mirror the sheet's exact bytes inside one bounded block in `<config-home>/AGENTS.md` and retain the sheet as the editable source of truth:
+Luca fork: skip this mirror and the `@` import; `poteto-mode` reads `~/.agents/pstack-models.md` itself, so never add the sheet to `AGENTS.md`/`CLAUDE.md`. Upstream: Codex writes `<config-home>/pstack-models.md`. Codex has no `@` include, so mirror the sheet's exact bytes inside one bounded block in `<config-home>/AGENTS.md` and retain the sheet as the editable source of truth:
 
 ```text
 <!-- pstack:models:begin -->

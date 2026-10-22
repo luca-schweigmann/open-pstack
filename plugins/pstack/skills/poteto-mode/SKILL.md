@@ -11,6 +11,8 @@ Bundled skills live at `../<name>/SKILL.md` from this file, so put this file's a
 
 These skills share one tree across Claude Code and Codex. Read [`references/provider-dispatch.md`](references/provider-dispatch.md) whenever a configured role launches. It defines the provider-qualified model descriptors, native/external route table, launcher, isolation, receipts, and dropout policy. Children never choose routes. When a skill names a Claude tool or built-in skill (`run`, `verify`, `plugin-dev:skill-development`), read [`references/codex-tools.md`](references/codex-tools.md) for the Codex equivalent.
 
+Luca fork: at run start read `~/.agents/instructions/pstack.md`, then your role file in `~/.agents/instructions/pstack-roles/` (`planung`, `build-chat`, `owner`, `verifier`), and before any configured launch the model sheet `~/.agents/pstack-models.md` (global AGENTS.md carries no copy). Children get only their role's rules: owners the `owner.md` brief block, never these files whole.
+
 ## Non-negotiables
 
 The Principles section below grounds every trigger. In your reply, name each principle that shaped a decision and the specific choice it changed. Cite only principles whose leaf SKILL.md you read this session.
