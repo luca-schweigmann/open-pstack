@@ -95,7 +95,7 @@ Every concurrent external lane needs distinct prompt, output, and receipt paths.
 
 ## Codex Cloud owners
 
-`codex-cloud:<env>` selects a Cloud environment, not a provider/model pair or runner adapter. Resolve the repository AGENTS.md `pstack pr owners:` line, then the sheet's `pr owners`, then `feature, refactoring`. Cloud uses the catalog's Sol family; read back the environment, full access, and assigned model and reject any mismatch before accepting a launch. Until the Cloud mini run passes, use native Codex; never silently fall back after a failed Cloud launch.
+`codex-cloud:<env>` selects a Cloud environment, not a provider/model pair or runner adapter. Resolve the repository AGENTS.md `pstack pr owners:` line, then the sheet's `pr owners`, then `feature, refactoring`. Cloud uses the catalog's Sol family; read back the environment, full access, and assigned model and reject any mismatch before accepting a launch. Until the repo's Cloud environment is published with a green browser start, use native Codex; never silently fall back after a failed Cloud launch.
 
 Setup provisions the selected fork revision and project-local skill links. The parent supplies the fork and project checkout, slice, starting SHA, branch and forge identities, and the [owner card](cloud-owner-contract.md) plus project AGENTS.md. No full skill or manual read is required. Preflight checks availability, not that a model has read files.
 
