@@ -3,6 +3,10 @@
 Mergify auto-queue is live: ready PRs to main require passing verify, Unfret and exact-head live-gate, and no unresolved review thread; workflow changes require operator queueing.
 This port applies the Cursor → Claude Code substitutions in skill bodies. Earlier drafts left them flagged; this revision resolves them. A later pass added a Codex build that shares the same skills; see [Codex port](#codex-port) below.
 
+## 1.15.0-luca.19
+
+- Cloud owner card follows Luca's rules: deslop/no-comments only for large or sensitive changes, only P0 red blocks, the brief's owner block wins, merge and deploy stay with the local build chat. poteto-mode notes that `~/.agents` files are absent in Codex Cloud.
+
 ## 1.15.0-luca.18
 
 - swarm, arena, interrogate and provider-dispatch read the model sheet from `~/.agents/pstack-models.md`, since the global rules no longer import it.
