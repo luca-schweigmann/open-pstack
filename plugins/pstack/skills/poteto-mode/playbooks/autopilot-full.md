@@ -2,6 +2,8 @@
 
 **You own the verdicts, never the PRs. One owner carries each PR from build to merge, and nothing merges until your verifier, who never wrote the code, has proven the code that lands.**
 
+Luca fork: Luca's layer (`~/.agents/instructions/pstack.md`, `pstack-roles/build-chat.md`) wins where it differs. The root (local build chat) runs every merge and deploy after its verdict; owners never merge (steps 2, 5). Deslop and no-comments only for large or sensitive changes (step 2). Only P0 blocks; no red test across sites (step 4). "CI" means the owner's green gate receipt on that head, not hosted CI (step 5).
+
 A verdict covers one patch and green CI covers one head. Step 4 verifies each changed patch within its per-head limit. The patch-id rule in `playbooks/shipping.md` can carry a lane's result, and every new head needs its own green CI.
 
 1. **The operator's gates come first.** The grant covers only the queue's items, so items the operator names as theirs and PRs outside the queue stop at merge-ready. A request to state the plan is not a go.

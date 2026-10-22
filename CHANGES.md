@@ -3,6 +3,11 @@
 Mergify auto-queue is live: ready PRs to main require passing verify, Unfret and exact-head live-gate, and no unresolved review thread; workflow changes require operator queueing.
 This port applies the Cursor → Claude Code substitutions in skill bodies. Earlier drafts left them flagged; this revision resolves them. A later pass added a Codex build that shares the same skills; see [Codex port](#codex-port) below.
 
+## 1.15.0-luca.20
+
+- Luca fork: Luca's layer wins over Autonomy and Non-negotiables; merges and deploys follow the repo release rule (poteto-mode SKILL.md).
+- Luca fork notes in autopilot-full (root merges, deslop only for large changes, P0-only blocks, CI = gate receipt) and verifier-contract (P0 triage, no red test across sites).
+
 ## 1.15.0-luca.19
 
 - Cloud owner card follows Luca's rules: deslop/no-comments only for large or sensitive changes, only P0 red blocks, the brief's owner block wins, merge and deploy stay with the local build chat. poteto-mode notes that `~/.agents` files are absent in Codex Cloud.
