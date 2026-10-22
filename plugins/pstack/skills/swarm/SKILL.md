@@ -5,6 +5,8 @@ description: "Fan out N parallel workers, drain them, and return one report. Use
 
 # Swarm
 
+Luca fork: the model sheet is `~/.agents/pstack-models.md`; read it before choosing descriptors (global `AGENTS.md`/`CLAUDE.md` carries no copy).
+
 **Dispatch contract.** Resolve each worker descriptor through [`provider-dispatch.md`](../poteto-mode/references/provider-dispatch.md). The parent starts native and external lanes; workers never route themselves. On Codex, resolve remaining Claude tool names via [`codex-tools.md`](../poteto-mode/references/codex-tools.md).
 
 ## Start

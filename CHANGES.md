@@ -3,6 +3,10 @@
 Mergify auto-queue is live: ready PRs to main require passing verify, Unfret and exact-head live-gate, and no unresolved review thread; workflow changes require operator queueing.
 This port applies the Cursor → Claude Code substitutions in skill bodies. Earlier drafts left them flagged; this revision resolves them. A later pass added a Codex build that shares the same skills; see [Codex port](#codex-port) below.
 
+## 1.15.0-luca.18
+
+- swarm, arena, interrogate and provider-dispatch read the model sheet from `~/.agents/pstack-models.md`, since the global rules no longer import it.
+
 ## 1.15.0-luca.17 loads Luca's pstack layer per role
 
 poteto-mode reads `~/.agents/instructions/pstack.md`, the role file and `~/.agents/pstack-models.md` at run start; setup-pstack no longer mirrors the model sheet into AGENTS.md/CLAUDE.md. Observed: the global rule file carried ~17k characters of pstack rules and the sheet into every normal chat.

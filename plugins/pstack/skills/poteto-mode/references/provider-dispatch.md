@@ -1,5 +1,7 @@
 # Provider dispatch
 
+Luca fork: the model sheet is `~/.agents/pstack-models.md`; read it before choosing descriptors (global `AGENTS.md`/`CLAUDE.md` carries no copy).
+
 pstack model choices are provider-qualified descriptors:
 
 ```text
