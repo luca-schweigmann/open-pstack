@@ -3,6 +3,10 @@
 Mergify auto-queue is live: ready PRs to main require passing verify, Unfret and exact-head live-gate, and no unresolved review thread; workflow changes require operator queueing.
 This port applies the Cursor → Claude Code substitutions in skill bodies. Earlier drafts left them flagged; this revision resolves them. A later pass added a Codex build that shares the same skills; see [Codex port](#codex-port) below.
 
+## 1.15.0-luca.17 loads Luca's pstack layer per role
+
+poteto-mode reads `~/.agents/instructions/pstack.md`, the role file and `~/.agents/pstack-models.md` at run start; setup-pstack no longer mirrors the model sheet into AGENTS.md/CLAUDE.md. Observed: the global rule file carried ~17k characters of pstack rules and the sheet into every normal chat.
+
 ## 1.15.0-luca.16 plans verification through the repo's verify skill
 
 Cloud owners use the owner card as their pstack manual and read only slice-selected skills. Preflight accepts `--only a,b,c`, keeps poteto-mode for the card, and removes unselected fork skill links while preserving repository skills. The root selects skills via codex-cloud-start `--skills`; owner tool output stays bounded.
